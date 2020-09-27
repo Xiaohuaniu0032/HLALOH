@@ -1,0 +1,3 @@
+#/home/fulongfei/miniconda3/envs/py27/bin/python /home/fulongfei/workdir/git_repo/HLALOH/OptiType/OptiTypePipeline.py -i /home/fulongfei/workdir/git_repo/OptiType/test/exome/NA11995_SRR766010_1_fished.fastq /home/fulongfei/workdir/git_repo/OptiType/test/exome/NA11995_SRR766010_2_fished.fastq --dna -v -o $PWD -c /home/fulongfei/workdir/git_repo/HLALOH/OptiType/config.ini
+
+/home/fulongfei/miniconda3/envs/py27/bin/python /home/fulongfei/workdir/software/OptiType-1.3.2/OptiTypePipeline.py -i /home/fulongfei/workdir/software/OptiType-1.3.2/test/exome/NA11995_SRR766010_1_fished.fastq /home/fulongfei/workdir/software/OptiType-1.3.2/test/exome/NA11995_SRR766010_2_fished.fastq --dna -v -o $PWD -c /home/fulongfei/workdir/software/OptiType-1.3.2/config.ini.example
