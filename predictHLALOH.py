@@ -67,7 +67,7 @@ def main():
 
 
     # get HLA two alleles's fasta sequence
-
+    
 
     # BAF
     nvaf = "%s/%s.normal.vaf" % (args.outdir,args.nname)
@@ -145,11 +145,6 @@ def main():
         norm_file = "%s/%s.norm.xls" % (args.outdir,name)
         logR = "%s/%s.logR.xls" % (args.outdir,name)
         cmd = "%s %s/CNVscan/bin/cal_logR.pl %s %s %s" % (perl,bin_dir,norm_file,ref_mat,logR)
-        of.write(cmd+'\n')
-
-        # s8. get ascatLogR file
-        logR = "%s/%s.ascat.logR.xls" % (args.outdir,name)
-        cmd = "%s %s/ASCAT/ascatLogR.pl %s %s %s" % (perl,bin_dir,nvaf,)
         of.write(cmd+'\n')
 
         idx += 1
