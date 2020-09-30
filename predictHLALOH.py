@@ -1,7 +1,7 @@
 import sys
 import os
 import configparser
-
+import argparse
 
 def parse_args():
     AP = argparse.ArgumentParser("detect HLA LOH from capture NGS data using paired tumor/normal")
@@ -14,6 +14,7 @@ def parse_args():
     AP.add_argument('-fa',help='fasta file',dest='fasta',default='/data1/database/b37/human_g1k_v37.fasta')
     AP.add_argument('-ref',help='cnv ref control dir',dest='ref')
     AP.add_argument('-gatkDir',help='gatk dir',dest='gatkDir')
+    AP.add_argument('-novoDir',help='novoalign bin dir',dest='novoDir')
     AP.add_argument('-od',help='output dir',dest='outdir')
 
     return AP.parse_args()
@@ -30,12 +31,15 @@ def main():
     # software
     perl = config['software']['perl']
     py3  = config['software']['python3']
-
+    samtools = config['software']['samtools']
     java = config['software']['java']
     gatk_dir = config['software']['gatk_dir']
+    sambamba = config['software']['sambamba']
+    bedtools = config['software']['bedtools']
+    rscript = config['software']['rscript']
 
 
-    runsh = args.outdir + '/%s.HLALOH.sh' % (args.name)
+    runsh = "%s/%s.HLALOH.sh" % (args.outdir,args.tname)
     of = open(runsh,'w')
 
     # extract HLA region read1/read2
@@ -49,8 +53,8 @@ def main():
                         )
 
     # HLA typing using OptiType
-    fq1 = "%s/%s.chr6region.1.fastq"
-    fq2 = "%s/%s.chr6region.2.fastq"
+    fq1 = "%s/%s.chr6region.1.fastq" % (args.outdir,args.nname)
+    fq2 = "%s/%s.chr6region.2.fastq" % (args.outdir,args.nname)
 
     cmd = "%s %s/OptiType-1.3.2/OptiTypePipeline.py -i %s %s --dna -v -o %s -c %s/OptiType-1.3.2/config.ini.example" % (py3,
         bin_dir,
@@ -63,11 +67,11 @@ def main():
     of.write(cmd+'\n')
 
     # transformat HLA result
-    hla_result_file = "%s/%s." % ()
+    #hla_result_file = "%s/%s." % ()
 
 
     # get HLA two alleles's fasta sequence
-    
+
 
     # BAF
     nvaf = "%s/%s.normal.vaf" % (args.outdir,args.nname)
@@ -99,7 +103,7 @@ def main():
         # s1. calculate depth
         cmd = "%s %s/CNVscan/bin/cal_depth.pl -bam %s -n %s -bed %s -sbb %s -outdir %s" % (perl,
                                                                                         bin_dir,
-                                                                                        bam,
+                                                                                        i,
                                                                                         name,
                                                                                         args.bed,
                                                                                         sambamba,
@@ -115,7 +119,7 @@ def main():
                                                                                                 args.bed,
                                                                                                 depth_file,
                                                                                                 bedtools,
-                                                                                                hg19,
+                                                                                                args.fasta,
                                                                                                 args.outdir
                                                                                                 )
 
@@ -137,7 +141,7 @@ def main():
         of.write(cmd+'\n')
 
         # s6. make ref matrix
-        ref_mat = "%s/ref.matrix.txt"
+        ref_mat = "%s/ref.matrix.txt" % (args.outdir)
         cmd = "%s %s/CNVscan/bin/make_ref_matrix.pl %s %s" % (perl,bin_dir,args.ref,ref_mat)
         of.write(cmd+'\n')
 
@@ -167,27 +171,9 @@ def main():
     of.write(cmd+'\n')
 
     # ASCAT
-    cmd = "library(ASCAT)"
+    ascatPurityPloidyFile = "%s/PurityPloidyEst.txt" % (args.outdir)
+    cmd = "%s %s/ASCAT/ascat.r %s %s %s %s %s" % (rscript,bin_dir,tumor_ascatlogR,tvaf,normal_ascatlogR,nvaf,ascatPurityPloidyFile)
     of.write(cmd+'\n')
-    
-    cmd = "ascat.bc = ascat.loadData(%s,%s,%s,%s)" % (tumor_ascatlogR,tvaf,normal_ascatlogR,nvaf)
-    of.write(cmd+'\n')
-
-    cmd = "ascat.plotRawData(ascat.bc)"
-    of.write(cmd+'\n')
-
-    cmd = "ascat.bc = ascat.aspcf(ascat.bc)"
-    of.write(cmd+'\n')
-
-    cmd = "ascat.plotSegmentedData(ascat.bc)"
-    of.write(cmd+'\n')
-
-    cmd = "ascat.output = ascat.runAscat(ascat.bc)"
-    of.write(cmd+'\n')
-
-    # outwrite ASCAT
-    ascatPurityPloidyFile = "%s/PurityPloidyEst.txt"
-
 
     # HLA LOH main script
     hla_alleles = "%s/%s.hla_alleles" % (args.outdir,args.nname)
@@ -223,8 +209,9 @@ def chr_naming(bam,samtools,outdir):
         chr_naming = 'no_prefix'
 
 
+    os.remove(samfile)
 
-    return $chr_naming
+    return chr_naming
 
 
 def extract_HLA_reads(bam,name,samtools,java,gatk_dir,outdir,runshFH):
@@ -238,9 +225,9 @@ def extract_HLA_reads(bam,name,samtools,java,gatk_dir,outdir,runshFH):
 
     #os.system(cmd)
 
-    chr_name = chr_naming(bam,
-                        samtools,
-                        outdir)
+    #chr_name = chr_naming(bam,samtools,outdir)
+
+    chr_name = 'no_prefix'
 
     if chr_name == 'no_prefix':
         region1 = '6:29909037-29913661'
@@ -298,8 +285,10 @@ def extract_HLA_reads(bam,name,samtools,java,gatk_dir,outdir,runshFH):
     fq1 = "%s/%s.chr6region.1.fastq" % (outdir,name)
     fq2 = "%s/%s.chr6region.2.fastq" % (outdir,name)
 
+    hla_sam = "%s/%s.hla.sam" % (outdir,name)
     cmd = "%s -jar %s/SamToFastq.jar I=%s F=%s F2=%s VALIDATION_STRINGENCY=SILENT" % (java,
                                                                                         gatk_dir,
+                                                                                        hla_sam,
                                                                                         fq1,
                                                                                         fq2
                                                                                         )
@@ -309,10 +298,14 @@ def extract_HLA_reads(bam,name,samtools,java,gatk_dir,outdir,runshFH):
 
 
 def translate_HLA_format(raw_res,new_res):
+    next
     
 
 def get_HLA_fasta(hla_a1,hla_a2,hla_b1,hla_b2,hla_c1,hla_c2,hla_fasta,outfile):
+    next
     
+if __name__ == "__main__":
+    main()
 
 
 
