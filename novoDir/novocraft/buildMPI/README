@@ -1,0 +1,40 @@
+
+*** EXPERIMENTAL ***
+
+Customising NovoalignMPI & NovoalignCSMPI
+
+
+This folder contains a set of source files and libraries so that users can 
+compile and link Novocraft MPI programs against different version and settings 
+of MPI.
+
+The scripts have been tested on CentOS 5.9, MAC OSX 10.5, Ubuntu 12.10 & 11.10 
+using MPICH2 and MPICH. There is no guarantee they will run on other systems 
+or with other MPIs such as OpenMPI. The libraries have been compiled with GCC 4.7.2
+
+The folder contains object libraries for Novoalign, Bamtools and, for some 
+systems, Tcmalloc & Unwind.
+
+There are also 3 source files
+   mpidriver.h		This routine encapsulates all the MPI API functions used by 
+                    	Novoalign and the main driver for passing messages.
+   mpidriver.cc
+   trace.cc		A Stack Dump routine
+
+
+BUILDING
+
+1. Ensure MPICH or MPICH2 installed and working. On some systems you may need to...
+     module load mpich2
+2. Ensure libssl-dev or openssl-devel and libbz2-dev are installed. 
+3. NovoalignCSMPI also requires hdf5 and hdf5-cpp version 1.8.8
+4. Run command
+     make all
+     
+This should create novoalgnMPI & novoalignCSMPI binaries in this folder. You can 
+then test from here or copy elsewhere. Remember a novoalign.lic file is required 
+to run these programs so make sure it's in PATH or in folder with novoalignMPI.
+
+If you are having trouble with link stage of the build such as missing symbols 
+please ensure libcrypto.so and libbz2.so are available. If still having trouble 
+try the Linux2.6 version of Novocraft programs.

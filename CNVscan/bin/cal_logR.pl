@@ -5,7 +5,7 @@ use POSIX qw(ceil);
 use Data::Dumper;
 
 my ($depth,$ref,$outfile) = @ARGV;
-
+# depth file is *.norm.xls
 my $name = (split /\./, basename $depth)[0];
 
 my %ref;

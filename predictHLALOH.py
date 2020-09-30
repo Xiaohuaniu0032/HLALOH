@@ -5,11 +5,15 @@ import configparser
 
 def parse_args():
     AP = argparse.ArgumentParser("detect HLA LOH from capture NGS data using paired tumor/normal")
-    AP.add_argument('-nbam',help='bam file',dest='bam')
+    AP.add_argument('-nbam',help='normal bam file',dest='nbam')
+    AP.add_argument('-tbam',help='tumor bam file',dest='tbam')
+    AP.add_argument('-bamDir',help='dir contains tumor and normal bam files',dest='bamdir')
     AP.add_argument('-bed',help='bed file',dest='bed')
-    AP.add_argument('-n',help='sample name',dest='name')
+    AP.add_argument('-nname',help='normal sample name',dest='nname')
+    AP.add_argument('-tname',help='tumor sample name',dest='tname')
     AP.add_argument('-fa',help='fasta file',dest='fasta',default='/data1/database/b37/human_g1k_v37.fasta')
     AP.add_argument('-ref',help='cnv ref control dir',dest='ref')
+    AP.add_argument('-gatkDir',help='gatk dir',dest='gatkDir')
     AP.add_argument('-od',help='output dir',dest='outdir')
 
     return AP.parse_args()
@@ -35,12 +39,12 @@ def main():
     of = open(runsh,'w')
 
     # extract HLA region read1/read2
-    extract_HLA_reads(args.bam,
-                        args.name,
-                        args.samtools,
+    extract_HLA_reads(args.nbam,
+                        args.nname,
+                        samtools,
                         java,
                         gatk_dir,
-                        outdir,
+                        args.outdir,
                         of
                         )
 
@@ -64,17 +68,148 @@ def main():
 
     # get HLA two alleles's fasta sequence
 
+
     # BAF
-    cmd = 
+    nvaf = "%s/%s.normal.vaf" % (args.outdir,args.nname)
+    tvaf = "%s/%s.tumor.vaf" % (args.outdir,args.tname)
+
+    cmd = "%s %s/BAF/pileup2vaf.v2.py -bam %s -bed %s -outfile %s" % (py3,
+                                                                        bin_dir,
+                                                                        args.nbam,
+                                                                        args.bed,
+                                                                        nvaf
+                                                                        )
+    of.write(cmd+'\n')
+
+    cmd = "%s %s/BAF/pileup2vaf.v2.py -bam %s -bed %s -outfile %s" % (py3,
+                                                                        bin_dir,
+                                                                        args.tbam,
+                                                                        args.bed,
+                                                                        tvaf
+                                                                        )
+    of.write(cmd+'\n')
+
 
     # logR
-    cmd = 
+    bams = [args.nbam,args.tbam]
+    names = [args.nname,args.tname]
+    idx = 0
+    for i in bams:
+        name = names[idx]
+        # s1. calculate depth
+        cmd = "%s %s/CNVscan/bin/cal_depth.pl -bam %s -n %s -bed %s -sbb %s -outdir %s" % (perl,
+                                                                                        bin_dir,
+                                                                                        bam,
+                                                                                        name,
+                                                                                        args.bed,
+                                                                                        sambamba,
+                                                                                        args.outdir
+                                                                                        )
+        of.write(cmd+'\n')
+
+        
+        # s2. add gc
+        depth_file = "%s/%s.targetcoverage.cnn" % (args.outdir,name)
+        cmd = "%s %s/CNVscan/bin/add_gc.pl -bed %s -depth %s -bedtools_bin %s -fa %s -outdir %s" % (perl,
+                                                                                                bin_dir,
+                                                                                                args.bed,
+                                                                                                depth_file,
+                                                                                                bedtools,
+                                                                                                hg19,
+                                                                                                args.outdir
+                                                                                                )
+
+        of.write(cmd+'\n')
+
+        # s3. infer sex
+        cmd = "%s %s/CNVscan/bin/infer_sex.py -cov %s -o %s/sex.txt" % (py3,bin_dir,depth_file,args.outdir)
+        of.write(cmd+'\n')
+
+        # s4. gc correct
+        add_gc_depth = "%s/%s.targetcoverage.cnn.with.gc.xls" % (args.outdir,name)
+        sex_file = "%s/sex.txt" % (args.outdir)
+        gc_correct_depth = "%s/%s.targetcoverage.cnn.with.gc.xls.gc.corrected.xls" % (args.outdir,name)
+        cmd = "%s %s/CNVscan/bin/gc_correct.r %s %s %s" % (rscript,bin_dir,add_gc_depth,sex_file,gc_correct_depth)
+        of.write(cmd+'\n')
+
+        # s5. normalize
+        cmd = "%s %s/CNVscan/bin/normalize.pl -d %s -od %s" % (perl,bin_dir,gc_correct_depth,args.outdir)
+        of.write(cmd+'\n')
+
+        # s6. make ref matrix
+        ref_mat = "%s/ref.matrix.txt"
+        cmd = "%s %s/CNVscan/bin/make_ref_matrix.pl %s %s" % (perl,bin_dir,args.ref,ref_mat)
+        of.write(cmd+'\n')
+
+        # s7. cal logR
+        norm_file = "%s/%s.norm.xls" % (args.outdir,name)
+        logR = "%s/%s.logR.xls" % (args.outdir,name)
+        cmd = "%s %s/CNVscan/bin/cal_logR.pl %s %s %s" % (perl,bin_dir,norm_file,ref_mat,logR)
+        of.write(cmd+'\n')
+
+        # s8. get ascatLogR file
+        logR = "%s/%s.ascat.logR.xls" % (args.outdir,name)
+        cmd = "%s %s/ASCAT/ascatLogR.pl %s %s %s" % (perl,bin_dir,nvaf,)
+        of.write(cmd+'\n')
+
+        idx += 1
+
+
+
 
     # estimate tumor purity/ploidy using ASCAT
-    cmd = 
+    # get ascat.logR file
+    tumor_ascatlogR = "%s/%s.ascat.logR.xls" % (args.outdir,args.tname)
+    normal_ascatlogR = "%s/%s.ascat.logR.xls" % (args.outdir,args.nname)
 
-    # HLA main script
-    cmd = '%s %s/lohhla/LOHHLAscript.R --patientId %s --outputDir %s --normalBAMfile %s --BAMDir %s --hlaPath %s --HLAfastaLoc %s --CopyNumLoc %s --mappingStep TRUE --minCoverageFilter 10 --fishingStep TRUE --cleanUp FALSE --gatkDir %s --novoDir %s' % ()
+    tumor_logR = "%s/%s.logR.xls" % (args.outdir,args.tname)
+    normal_logR = "%s/%s.logR.xls" % (args.outdir,args.nname)
+
+    cmd = "%s %s/ASCAT/ascatLogR.pl %s %s %s" % (perl,bin_dir,tvaf,tumor_logR,tumor_ascatlogR)
+    of.write(cmd+'\n')
+
+    cmd = "%s %s/ASCAT/ascatLogR.pl %s %s %s" % (perl,bin_dir,nvaf,normal_logR,normal_ascatlogR)
+    of.write(cmd+'\n')
+
+    # ASCAT
+    cmd = "library(ASCAT)"
+    of.write(cmd+'\n')
+    
+    cmd = "ascat.bc = ascat.loadData(%s,%s,%s,%s)" % (tumor_ascatlogR,tvaf,normal_ascatlogR,nvaf)
+    of.write(cmd+'\n')
+
+    cmd = "ascat.plotRawData(ascat.bc)"
+    of.write(cmd+'\n')
+
+    cmd = "ascat.bc = ascat.aspcf(ascat.bc)"
+    of.write(cmd+'\n')
+
+    cmd = "ascat.plotSegmentedData(ascat.bc)"
+    of.write(cmd+'\n')
+
+    cmd = "ascat.output = ascat.runAscat(ascat.bc)"
+    of.write(cmd+'\n')
+
+    # outwrite ASCAT
+    ascatPurityPloidyFile = "%s/PurityPloidyEst.txt"
+
+
+    # HLA LOH main script
+    hla_alleles = "%s/%s.hla_alleles" % (args.outdir,args.nname)
+    hla_fa = "%s/patient.hla.fa" % (args.outdir)
+
+    cmd = '%s %s/lohhla/LOHHLAscript.R --patientId %s --outputDir %s --normalBAMfile %s --BAMDir %s --hlaPath %s --HLAfastaLoc %s --CopyNumLoc %s --mappingStep TRUE --minCoverageFilter 10 --fishingStep TRUE --cleanUp FALSE --gatkDir %s --novoDir %s' % (rscript,
+                                        bin_dir,
+                                        args.tname,
+                                        args.outdir,
+                                        args.nbam,
+                                        args.bamdir,
+                                        hla_alleles,
+                                        hla_fa,
+                                        ascatPurityPloidyFile,
+                                        args.gatkDir,
+                                        args.novoDir
+                                        )
     of.write(cmd+'\n')
     of.close()
 
