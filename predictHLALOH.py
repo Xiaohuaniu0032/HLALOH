@@ -2,6 +2,7 @@ import sys
 import os
 import configparser
 import argparse
+import glob
 
 def parse_args():
     AP = argparse.ArgumentParser("detect HLA LOH from capture NGS data using paired tumor/normal")
@@ -31,6 +32,7 @@ def main():
     # software
     perl = config['software']['perl']
     py3  = config['software']['python3']
+    py2 = config['software']['python2']
     samtools = config['software']['samtools']
     java = config['software']['java']
     gatk_dir = config['software']['gatk_dir']
@@ -46,6 +48,7 @@ def main():
     extract_HLA_reads(args.nbam,
                         args.nname,
                         samtools,
+                        bedtools,
                         java,
                         gatk_dir,
                         args.outdir,
@@ -56,7 +59,7 @@ def main():
     fq1 = "%s/%s.chr6region.1.fastq" % (args.outdir,args.nname)
     fq2 = "%s/%s.chr6region.2.fastq" % (args.outdir,args.nname)
 
-    cmd = "%s %s/OptiType-1.3.2/OptiTypePipeline.py -i %s %s --dna -v -o %s -c %s/OptiType-1.3.2/config.ini.example" % (py3,
+    cmd = "%s %s/OptiType-1.3.2/OptiTypePipeline.py -i %s %s --dna -v -o %s -c %s/OptiType-1.3.2/config.ini.example" % (py2,
         bin_dir,
         fq1,
         fq2,
@@ -66,11 +69,19 @@ def main():
 
     of.write(cmd+'\n')
 
+
     # transformat HLA result
-    #hla_result_file = "%s/%s." % ()
+    hla_res = glob.glob("%s/*/*_result.tsv" % args.outdir)[0]
+    print(hla_res)
+
+    new_hla_res = "%s/hla.res" % (args.outdir)
+    cmd = "%s %s/tools/translate_HLA_format.py -i %s -o %s" % (py3,bin_dir,hla_res,new_hla_res)
+
+    of.write(cmd+'\n')
 
 
-    # get HLA two alleles's fasta sequence
+    # get HLA alleles' fasta sequence
+
 
 
     # BAF
@@ -214,7 +225,7 @@ def chr_naming(bam,samtools,outdir):
     return chr_naming
 
 
-def extract_HLA_reads(bam,name,samtools,java,gatk_dir,outdir,runshFH):
+def extract_HLA_reads(bam,name,samtools,bedtools,java,gatk_dir,outdir,runshFH):
     cmd = "%s view -H %s >%s/%s.hla.sam" % (samtools,
                                             bam,
                                             outdir,
@@ -280,29 +291,36 @@ def extract_HLA_reads(bam,name,samtools,java,gatk_dir,outdir,runshFH):
     6.chr6_qbl_hap6
     7.chr6_ssto_hap7
     '''
-
+    
     # turn into fastq
     fq1 = "%s/%s.chr6region.1.fastq" % (outdir,name)
     fq2 = "%s/%s.chr6region.2.fastq" % (outdir,name)
 
     hla_sam = "%s/%s.hla.sam" % (outdir,name)
-    cmd = "%s -jar %s/SamToFastq.jar I=%s F=%s F2=%s VALIDATION_STRINGENCY=SILENT" % (java,
-                                                                                        gatk_dir,
-                                                                                        hla_sam,
-                                                                                        fq1,
-                                                                                        fq2
-                                                                                        )
 
+    # convert to bam
+    hla_bam = "%s/%s.hla.bam" % (outdir,name)
+    cmd = "%s view -b -o %s %s" % (samtools,hla_bam,hla_sam)
     runshFH.write(cmd+'\n')
-    #os.system(cmd)
 
+    # sort by name
+    bam_sort_by_name = "%s/%s.sort_by_name.bam" % (outdir,name)
+    cmd = "%s sort -n %s -o %s" % (samtools,hla_bam,bam_sort_by_name)
+    runshFH.write(cmd+'\n')
 
-def translate_HLA_format(raw_res,new_res):
-    next
+    # remove temp sam/bam
+
+    # bedtools bamtofastq
+    cmd = "%s bamtofastq -i %s -fq %s -fq2 %s" % (bedtools,bam_sort_by_name,fq1,fq2)
+    runshFH.write(cmd+'\n')
     
 
-def get_HLA_fasta(hla_a1,hla_a2,hla_b1,hla_b2,hla_c1,hla_c2,hla_fasta,outfile):
-    next
+    # Illegal Mate State
+    # https://www.biostars.org/p/59521/
+
+    #cmd = "%s -jar %s/SamToFastq.jar I=%s F=%s F2=%s VALIDATION_STRINGENCY=SILENT" % (java, gatk_dir, hla_sam, fq1, fq2)
+
+
     
 if __name__ == "__main__":
     main()
