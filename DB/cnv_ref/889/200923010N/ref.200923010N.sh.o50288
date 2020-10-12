@@ -1,0 +1,10 @@
+gc col is 6
+chrY not exists!
+X/autochr ratio is 0.9547657512116317 (>=0.67), sex is female
+autochr mean cov is: 619
+chrX mean cov is: 591
+infered sex is female
+[1] "infered sex is: female"
+[1] "median depth of all exon is: 606"
+Normalizing 200923010N
+median cov is 606

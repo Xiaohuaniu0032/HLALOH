@@ -27,9 +27,10 @@ while (<IN>){
 	chomp;
 	my @arr = split /\t/;
 	my $logR;
-	if (exists $logR{$arr[1]}{$arr[2]}){
-		$logR = $logR{$arr[1]}{$arr[2]};
+	if (exists $logR{$arr[0]}{$arr[1]}){
+		$logR = $logR{$arr[0]}{$arr[1]};
 	}else{
+		# obey BAF SNP info (if one SNP in BAF do not have effective LogR, then set its logR = 0, which means cn is 2)
 		$logR = "0"; # set 0 means the copy number is 2
 		print "$arr[0].$arr[1].$arr[2] in ascat.BAF file does not have the logR info, please pay atention\n";
 	}

@@ -71,11 +71,14 @@ def main():
 
 
     # transformat HLA result
-    hla_res = glob.glob("%s/*/*_result.tsv" % args.outdir)[0]
-    print(hla_res)
+    cmd = "cp %s/*/*_result.tsv %s/hla.result.raw" % (args.outdir,args.outdir)
+    of.write(cmd+'\n')
 
-    new_hla_res = "%s/hla.res" % (args.outdir)
-    cmd = "%s %s/tools/translate_HLA_format.py -i %s -o %s" % (py3,bin_dir,hla_res,new_hla_res)
+    #hla_res = glob.glob("%s/*/*_result.tsv" % args.outdir)[0]
+    #print(hla_res)
+    raw_hla_res = "%s/hla.result.raw" % (args.outdir)
+    new_hla_res = "%s/hla.result.new" % (args.outdir)
+    cmd = "%s %s/tools/translate_HLA_format.py -i %s -o %s" % (py3,bin_dir,raw_hla_res,new_hla_res)
 
     of.write(cmd+'\n')
 
