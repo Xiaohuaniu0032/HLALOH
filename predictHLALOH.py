@@ -45,6 +45,7 @@ def main():
     of = open(runsh,'w')
 
     # extract HLA region read1/read2
+    of.write("###extract HLA reads"+'\n')
     extract_HLA_reads(args.nbam,
                         args.nname,
                         samtools,
@@ -67,6 +68,7 @@ def main():
         bin_dir
         )
 
+    of.write('\n'+"###HLA Typing"+'\n')
     of.write(cmd+'\n')
 
 
@@ -97,6 +99,7 @@ def main():
                                                                         args.bed,
                                                                         nvaf
                                                                         )
+    of.write('\n'+"###cal BAF for normal"+'\n')
     of.write(cmd+'\n')
 
     cmd = "%s %s/BAF/pileup2vaf.v2.py -bam %s -bed %s -outfile %s" % (py3,
@@ -105,15 +108,20 @@ def main():
                                                                         args.bed,
                                                                         tvaf
                                                                         )
+    of.write('\n'+"###cal BAF for tumor"+'\n')
     of.write(cmd+'\n')
 
 
     # logR
     bams = [args.nbam,args.tbam]
     names = [args.nname,args.tname]
+    stype = ['normal','tumor']
+
     idx = 0
     for i in bams:
         name = names[idx]
+        st = stype[idx]
+        of.write('\n' + "### call CNV for %s" % (st) + '\n')
         # s1. calculate depth
         cmd = "%s %s/CNVscan/bin/cal_depth.pl -bam %s -n %s -bed %s -sbb %s -outdir %s" % (perl,
                                                                                         bin_dir,
@@ -179,14 +187,17 @@ def main():
     normal_logR = "%s/%s.logR.xls" % (args.outdir,args.nname)
 
     cmd = "%s %s/ASCAT/ascatLogR.pl %s %s %s" % (perl,bin_dir,tvaf,tumor_logR,tumor_ascatlogR)
+    of.write('\n'+"###make ascat logR for tumor"+'\n')
     of.write(cmd+'\n')
 
     cmd = "%s %s/ASCAT/ascatLogR.pl %s %s %s" % (perl,bin_dir,nvaf,normal_logR,normal_ascatlogR)
+    of.write('\n'+"###make ascat logR for normal"+'\n')
     of.write(cmd+'\n')
 
     # ASCAT
     ascatPurityPloidyFile = "%s/PurityPloidyEst.txt" % (args.outdir)
     cmd = "%s %s/ASCAT/ascat.r %s %s %s %s %s" % (rscript,bin_dir,tumor_ascatlogR,tvaf,normal_ascatlogR,nvaf,ascatPurityPloidyFile)
+    of.write('\n'+"###estimate tumor purity & ploidy By ASCAT"+'\n')
     of.write(cmd+'\n')
 
     # HLA LOH main script
@@ -205,6 +216,7 @@ def main():
                                         args.gatkDir,
                                         args.novoDir
                                         )
+    of.write('\n'+"###detect HLA LOH by lohhla software"+'\n')
     of.write(cmd+'\n')
     of.close()
 
