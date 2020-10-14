@@ -86,7 +86,11 @@ def main():
 
 
     # get HLA alleles' fasta sequence
+    hla_fa = "%s/patient.hla.fa" % (args.outdir)
+    cmd = "%s %s/tools/get_hla_fasta.py -i %s -o %s" % (py3,bin_dir,raw_hla_res,hla_fa)
 
+    of.write('\n'+"###get hla fasta"+'\n')
+    of.write(cmd+'\n')
 
 
     # BAF
@@ -109,6 +113,11 @@ def main():
                                                                         tvaf
                                                                         )
     of.write('\n'+"###cal BAF for tumor"+'\n')
+    of.write(cmd+'\n')
+
+    # get tumor & normal overlap BAF sites
+    cmd = "%s %s/tools/tumor_normal_overlap_BAF.pl -nvaf %s -tvaf %s -od %s" % (perl,bin_dir,nvaf,tvaf,args.outdir)
+    of.write('\n'+"###get tumor & normal overlapped BAF sites"+'\n')
     of.write(cmd+'\n')
 
 
@@ -176,32 +185,36 @@ def main():
         idx += 1
 
 
-
-
     # estimate tumor purity/ploidy using ASCAT
     # get ascat.logR file
-    tumor_ascatlogR = "%s/%s.ascat.logR.xls" % (args.outdir,args.tname)
-    normal_ascatlogR = "%s/%s.ascat.logR.xls" % (args.outdir,args.nname)
-
     tumor_logR = "%s/%s.logR.xls" % (args.outdir,args.tname)
     normal_logR = "%s/%s.logR.xls" % (args.outdir,args.nname)
 
-    cmd = "%s %s/ASCAT/ascatLogR.pl %s %s %s" % (perl,bin_dir,tvaf,tumor_logR,tumor_ascatlogR)
+    # re-format
+    tumor_ascatlogR = "%s/%s.ascat.logR.xls" % (args.outdir,args.tname)
+    normal_ascatlogR = "%s/%s.ascat.logR.xls" % (args.outdir,args.nname)
+
+    # overlaped BAF sites
+    n_vaf = "%s/%s.normal.overlap.vaf" % (args.outdir,args.nname)
+    t_vaf = "%s/%s.tumor.overlap.vaf" % (args.outdir,args.tname)
+
+    cmd = "%s %s/tools/ascatLogR.pl %s %s %s" % (perl,bin_dir,t_vaf,tumor_logR,tumor_ascatlogR)
     of.write('\n'+"###make ascat logR for tumor"+'\n')
     of.write(cmd+'\n')
 
-    cmd = "%s %s/ASCAT/ascatLogR.pl %s %s %s" % (perl,bin_dir,nvaf,normal_logR,normal_ascatlogR)
+    cmd = "%s %s/tools/ascatLogR.pl %s %s %s" % (perl,bin_dir,n_vaf,normal_logR,normal_ascatlogR)
     of.write('\n'+"###make ascat logR for normal"+'\n')
     of.write(cmd+'\n')
 
     # ASCAT
     ascatPurityPloidyFile = "%s/PurityPloidyEst.txt" % (args.outdir)
-    cmd = "%s %s/ASCAT/ascat.r %s %s %s %s %s" % (rscript,bin_dir,tumor_ascatlogR,tvaf,normal_ascatlogR,nvaf,ascatPurityPloidyFile)
+    cmd = "%s %s/tools/ascat.r %s %s %s %s %s" % (rscript,bin_dir,tumor_ascatlogR,t_vaf,normal_ascatlogR,n_vaf,ascatPurityPloidyFile)
+    
     of.write('\n'+"###estimate tumor purity & ploidy By ASCAT"+'\n')
     of.write(cmd+'\n')
 
     # HLA LOH main script
-    hla_alleles = "%s/%s.hla_alleles" % (args.outdir,args.nname)
+    hla_alleles = "%s/hla.result.new" % (args.outdir)
     hla_fa = "%s/patient.hla.fa" % (args.outdir)
 
     cmd = '%s %s/lohhla/LOHHLAscript.R --patientId %s --outputDir %s --normalBAMfile %s --BAMDir %s --hlaPath %s --HLAfastaLoc %s --CopyNumLoc %s --mappingStep TRUE --minCoverageFilter 10 --fishingStep TRUE --cleanUp FALSE --gatkDir %s --novoDir %s' % (rscript,
