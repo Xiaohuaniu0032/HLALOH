@@ -186,7 +186,7 @@ def main():
 
 
     # estimate tumor purity/ploidy using ASCAT
-    # get ascat.logR file
+    ### get ascat.logR file
     tumor_logR = "%s/%s.logR.xls" % (args.outdir,args.tname)
     normal_logR = "%s/%s.logR.xls" % (args.outdir,args.nname)
 
@@ -206,18 +206,37 @@ def main():
     of.write('\n'+"###make ascat logR for normal"+'\n')
     of.write(cmd+'\n')
 
+
+    ### get ascat.BAF file
+    of.write('\n'+"###re-format BAF"+'\n')
+    t_baf_ascat = "%s/%s.ascat.BAF.xls" % (args.outdir,args.tname)
+    n_baf_ascat = "%s/%s.ascat.BAF.xls" % (args.outdir,args.nname)
+
+    cmd = "%s %s/tools/ascatBAF.pl %s %s" % (perl,bin_dir,n_vaf,n_baf_ascat)
+    of.write(cmd+'\n')
+
+    cmd = "%s %s/tools/ascatBAF.pl %s %s" % (perl,bin_dir,t_vaf,t_baf_ascat)
+    of.write(cmd+'\n')
+
+
     # ASCAT
     ascatPurityPloidyFile = "%s/PurityPloidyEst.txt" % (args.outdir)
-    cmd = "%s %s/tools/ascat.r %s %s %s %s %s" % (rscript,bin_dir,tumor_ascatlogR,t_vaf,normal_ascatlogR,n_vaf,ascatPurityPloidyFile)
+    cmd = "%s %s/tools/ascat.r %s %s %s %s %s" % (rscript,bin_dir,t_baf_ascat,n_baf_ascat,tumor_ascatlogR,normal_ascatlogR,ascatPurityPloidyFile)
     
     of.write('\n'+"###estimate tumor purity & ploidy By ASCAT"+'\n')
+    of.write(cmd+'\n')
+
+    # re-format ASCAT
+    pp = "%s/purity_ploidy_estimate_by_ASCAT.txt" % (args.outdir)
+    cmd = "%s %s/tools/reformat_ASCAT.pl %s %s" % (perl,bin_dir,ascatPurityPloidyFile,pp)
     of.write(cmd+'\n')
 
     # HLA LOH main script
     hla_alleles = "%s/hla.result.new" % (args.outdir)
     hla_fa = "%s/patient.hla.fa" % (args.outdir)
+    hla_db = "%s/lohhla/data/hla.dat" % (bin_dir)
 
-    cmd = '%s %s/lohhla/LOHHLAscript.R --patientId %s --outputDir %s --normalBAMfile %s --BAMDir %s --hlaPath %s --HLAfastaLoc %s --CopyNumLoc %s --mappingStep TRUE --minCoverageFilter 10 --fishingStep TRUE --cleanUp FALSE --gatkDir %s --novoDir %s' % (rscript,
+    cmd = '%s %s/lohhla/LOHHLAscript.R --patientId %s --outputDir %s --normalBAMfile %s --BAMDir %s --hlaPath %s --HLAfastaLoc %s --CopyNumLoc %s --mappingStep TRUE --minCoverageFilter 10 --fishingStep TRUE --cleanUp FALSE --gatkDir %s --novoDir %s --HLAexonLoc %s' % (rscript,
                                         bin_dir,
                                         args.tname,
                                         args.outdir,
@@ -225,9 +244,10 @@ def main():
                                         args.bamdir,
                                         hla_alleles,
                                         hla_fa,
-                                        ascatPurityPloidyFile,
+                                        pp,
                                         args.gatkDir,
-                                        args.novoDir
+                                        args.novoDir,
+                                        hla_db
                                         )
     of.write('\n'+"###detect HLA LOH by lohhla software"+'\n')
     of.write(cmd+'\n')

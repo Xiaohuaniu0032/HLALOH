@@ -1,37 +1,28 @@
 use strict;
 use warnings;
 
-# for translate file format
-# input: pileup2vaf.v2.py's outfile
-# output: ASCAT's BAF file format
-#
+# translate BAF into ascat's format
 
-my ($vaf,$snp_pos,$outfile) = @ARGV;
 
-my %vaf;
-open IN, "$vaf" or die;
-<IN>;
-while (<IN>){
-	chomp;
-	my @arr = split /\t/;
-	$vaf{$arr[0]}{$arr[1]} = $arr[-1];
-}
-close IN;
+my ($vaf,$outfile) = @ARGV;
+
 
 open O, ">$outfile" or die;
 print O "\tchrs\tpos\tS1\n";
 
 my $flag = 0;
-open IN, "$snp_pos" or die;
+open IN, "$vaf" or die;
+<IN>;
 while (<IN>){
 	chomp;
+	$flag += 1;
 	my @arr = split /\t/;
-	if (exists $vaf{$arr[0]}{$arr[1]}){
-		$flag += 1;
-		my $snp = "SNP".$flag;
-		my $vaf = $vaf{$arr[0]}{$arr[1]};
-		print O "$snp\t$arr[0]\t$arr[1]\t$vaf\n";
+	my $chr = $arr[0];
+	if ($chr =~ /^chr/){
+		$chr =~ s/^chr//;
 	}
+	my $snp = "SNP".$flag;
+	print O "$snp\t$arr[0]\t$arr[1]\t$arr[-1]\n";
 }
 close IN;
 close O;
