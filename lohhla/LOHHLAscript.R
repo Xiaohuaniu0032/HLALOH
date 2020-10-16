@@ -110,48 +110,12 @@ require(zoo, quietly = TRUE)
 require(Rsamtools, quietly = TRUE)
 
 
-
-###########
-# inputs #
-###########
-
-interactive           <- FALSE
-if(interactive)
-{
-  # if you wish to run script interactively, then alter parameters below
-  opt<-parse_args(opt_parser,c('--patientId', 'G_K107'
-                               , '--outputDir', '/camp/lab/swantonc/working/mcgrann/projects/LOHproject/kidney_run/G_K107_full/'
-                               , '--normalBAMfile', '/camp/project/tracerX/working/CRENAL/OUTPUT/G_K107/Rabbit_Hole_Exome/MERGED/DE_DUPED/N1d1ex1.bam'
-                               , '--BAMDir', '/camp/project/tracerX/working/CRENAL/OUTPUT/G_K107/Rabbit_Hole_Exome/MERGED/DE_DUPED/'
-                               , '--hlaPath', '/camp/project/tracerX/working/CRENAL/OUTPUT/G_K107/Rabbit_Hole_Exome/MERGED/POLYSOLVER/HLA_Type/winners.hla.txt'
-                               , '--HLAfastaLoc', '/farm/home/lr-tct-lif/wilson52/installs/polysolver/data/abc_complete.fasta'
-                               , '--CopyNumLoc', '/camp/lab/swantonc/working/mcgrann/projects/LOHproject/kidney_run/G_K107/copyNumSolutions.txt'
-                               , '--mappingStep', 'TRUE'
-                               , '--cleanUp', 'TRUE'
-                               , '--overrideDir', '/camp/lab/swantonc/working/mcgrann/projects/LOHproject/kidney_run/G_K107/flagstat/'
-                               , '--gatkDir', '/camp/apps/eb/software/TracerX-Picard-GATK/0.1-Java-1.7.0_80/bin/'
-                               , '--novoDir', '/camp/apps/eb/software/novoalign/3.07.00/bin/'))
-
-  opt<-parse_args(opt_parser,c('--patientId', 'G_K107'
-                               , '--outputDir', '/camp/lab/swantonc/working/rosentr/projects/PolySolverLOH/test/test-renal/G_K107-v2/'
-                               , '--normalBAMfile', '/camp/lab/swantonc/working/rosentr/projects/PolySolverLOH/test/test-renal/G_K107-v2/BAMs/B1d1xx1.bam'
-                               , '--BAMDir', '/camp/lab/swantonc/working/rosentr/projects/PolySolverLOH/test/test-renal/G_K107-v2/BAMs/'
-                               , '--hlaPath', '/camp/project/tracerX/working/CRENAL/OUTPUT/G_K107/Rabbit_Hole_Exome/MERGED/POLYSOLVER/HLA_Type/winners.hla.txt'
-                               , '--HLAfastaLoc', '/farm/home/lr-tct-lif/wilson52/installs/polysolver/data/abc_complete.fasta'
-                               , '--CopyNumLoc', '/camp/lab/swantonc/working/rosentr/projects/PolySolverLOH/test/test-renal/G_K107-v2/copyNumSolutions.txt'
-                               , '--mappingStep', 'TRUE'
-                               , '--cleanUp', 'TRUE'
-                               , '--overrideDir', '/camp/lab/swantonc/working/rosentr/projects/PolySolverLOH/test/test-renal/G_K107-v2/flagstat/'
-                               , '--gatkDir', '/camp/apps/eb/software/TracerX-Picard-GATK/0.1-Java-1.7.0_80/bin/'
-                               , '--novoDir', '/camp/apps/eb/software/novoalign/3.07.00/bin/'))
-  
-}
-
 print(full.patient)
 system('echo ${SLURM_JOBID}')
 
-figureDir <- paste(workDir,"/Figures",sep="")
+figureDir <- paste(workDir,"/Figures",sep="") # workDir is the outputDir
 
+# log name, so fucking complex
 log.name  <- paste(workDir, "/running.hla.loh.exome@", gsub(":", "-", gsub(" +", "_", date())), "_log.txt", sep="")
 
 
@@ -165,6 +129,7 @@ extractUniqueReads      <- TRUE
 
 performIntegerCopyNum   <- TRUE
 useLogRbin              <- TRUE
+
 if(CopyNumLoc == 'FALSE'){
   performIntegerCopyNum <- FALSE
   useLogRbin            <- FALSE
@@ -245,6 +210,10 @@ get.partially.matching.reads <- function(workDir, regionDir, BAMDir, BAMfile){
   # fish partially matching reads
   cmd <- paste('samtools view ', BAMDir, '/', BAMfile, ' | grep -F -f ', kmerFile, ' >> ', regionDir, '/fished.sam', sep = '')
   system(cmd)
+
+  # convert to bam
+  cmd <- paste()
+  # sort by name
 
   # convert to fastq
   cmd <- paste('java -jar ', GATKDir, '/SamToFastq.jar I=', regionDir, '/fished.sam F=', regionDir, '/fished.1.fastq F2=', regionDir, '/fished.2.fastq VALIDATION_STRINGENCY=SILENT', sep = '')
@@ -557,7 +526,8 @@ if(mapping.step){
   # nix file for patient reference fasta -- novoalign
   write.table(paste('\nnix file for patient reference fasta at ', date(), '\n', sep = ''), file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
   novoindex <- paste(NOVODir,'/novoindex',sep="")
-  novoindexCMD <- paste('novoindex ', workDir, '/', full.patient, '.patient.hlaFasta.nix', ' ', workDir, '/', full.patient, '.patient.hlaFasta.fa', sep = '')
+  #print(novoindex)
+  novoindexCMD <- paste(novoindex,' ', workDir, '/', full.patient, '.patient.hlaFasta.nix', ' ', workDir, '/', full.patient, '.patient.hlaFasta.fa', sep = '')
   write.table(novoindexCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
   system(novoindexCMD)
 
@@ -568,8 +538,9 @@ if(mapping.step){
 
   for(BAMfile in BAMfiles){
     
-    BAMid <- unlist(strsplit(BAMfile, split = '.bam'))[1]
-    
+    #BAMid <- unlist(strsplit(BAMfile, split = '.bam'))[1] # sample name
+    BAMid <- strsplit(basename(bam),'.',fixed=TRUE)[[1]][1]
+
     if(paste(BAMDir, '/', BAMfile, sep = '') == normalBAMfile){
       normalName <- BAMid
     }
@@ -577,6 +548,8 @@ if(mapping.step){
     print(BAMid)
     
     regionDir <- paste(workDir, '/', BAMid, sep = '')
+    
+    # make new dir for each sample
     if(!dir.exists(regionDir))
     {
       dir.create(regionDir,recursive=TRUE)
@@ -590,15 +563,15 @@ if(mapping.step){
     write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
     system(samtoolsCMD)
     
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6:29909037-29913661 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " 6:29909037-29913661 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
     write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
     system(samtoolsCMD)
     
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6:31321649-31324964 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " 6:31321649-31324964 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
     write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
     system(samtoolsCMD)
     
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6:31236526-31239869 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " 6:31236526-31239869 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
     write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
     system(samtoolsCMD)
 
@@ -612,37 +585,53 @@ if(mapping.step){
     # write.table(paste(samtoolsCMD, '\n', sep = ''), file = log.name, row.names=FALSE, col.names=FALSE, quote=FALSE, append = TRUE)
     # system(samtoolsCMD)
     
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_apd_hap1 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    system(samtoolsCMD)
+    # skip hap contigs
+    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_apd_hap1 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    #system(samtoolsCMD)
 
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_cox_hap2 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    system(samtoolsCMD)
+    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_cox_hap2 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    #system(samtoolsCMD)
     
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_dbb_hap3 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    system(samtoolsCMD)
+    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_dbb_hap3 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    #system(samtoolsCMD)
     
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_mann_hap4 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    system(samtoolsCMD)
+    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_mann_hap4 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    #system(samtoolsCMD)
     
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_mcf_hap5 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    system(samtoolsCMD)
+    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_mcf_hap5 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    #system(samtoolsCMD)
     
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_qbl_hap6 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    system(samtoolsCMD)
+    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_qbl_hap6 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    #system(samtoolsCMD)
     
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_ssto_hap7 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    system(samtoolsCMD)
+    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_ssto_hap7 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    #system(samtoolsCMD)
     
     # turn into fastq -- this step has an error with unpaired mates, but seems to work ok just the same (VALIDATION_STRINGENCY=SILENT)
     write.table(paste('\nturn into fastq at ', date(), '\n', sep = ''), file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    samToFastQ <- paste("java -jar ",GATKDir,"/SamToFastq.jar ","I=",regionDir,"/",BAMid,".chr6region.sam"," F=",regionDir,"/",BAMid,".chr6region.1.fastq"," F2=",regionDir,"/",BAMid,".chr6region.2.fastq"," VALIDATION_STRINGENCY=SILENT",sep="")
+    
+    # use bedtools bamtofastq, not use SamToFastq.jar
+    # convert sam to bam
+    bam <- paste(regionDir,"/",BAMid,".chr6region.bam",sep="")
+    sam <- paste(regionDir,'/',BAMid,".chr6region.sam",sep="")
+    sam2bam <- paste('samtools view -b -o ',bam,' ',sam,sep="")
+    system(sam2bam)
+    # sort by name
+    bam_sort_by_name <- paste(regionDir,'/',BAMid,'.chr6region.sort_by_name.bam',sep="")
+    sortbyname <- paste('samtools sort -n -o ',bam_sort_by_name,' ',bam,sep="")
+    system(sortbyname)
+    # bam2fq
+    FQ1 <- paste(regionDir,'/',BAMid,".chr6region.1.fastq",sep="")
+    FQ2 <- paste(regionDir,'/',BAMid,".chr6region.2.fastq",sep="")
+    samToFastQ <- paste('bedtools bamtofastq -i ',bam_sort_by_name,' -fq ',FQ1,' -fq2 ',FQ2,sep="")
+    #samToFastQ <- paste("java -jar ",GATKDir,"/SamToFastq.jar ","I=",regionDir,"/",BAMid,".chr6region.sam"," F=",regionDir,"/",BAMid,".chr6region.1.fastq"," F2=",regionDir,"/",BAMid,".chr6region.2.fastq"," VALIDATION_STRINGENCY=SILENT",sep="")
     write.table(samToFastQ, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
     system(samToFastQ)
 
