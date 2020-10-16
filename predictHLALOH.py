@@ -235,11 +235,13 @@ def main():
     hla_alleles = "%s/hla.result.new" % (args.outdir)
     hla_fa = "%s/patient.hla.fa" % (args.outdir)
     hla_db = "%s/lohhla/data/hla.dat" % (bin_dir)
-
+    workDir = "%s/lohhla" % (args.outdir) # make a deeper dir to store lohhla result
+    if not os.path.exists(workDir):
+        os.mkdir(workDir)
     cmd = '%s %s/lohhla/LOHHLAscript.R --patientId %s --outputDir %s --normalBAMfile %s --BAMDir %s --hlaPath %s --HLAfastaLoc %s --CopyNumLoc %s --mappingStep TRUE --minCoverageFilter 10 --fishingStep TRUE --cleanUp FALSE --gatkDir %s --novoDir %s --HLAexonLoc %s' % (rscript,
                                         bin_dir,
                                         args.tname,
-                                        args.outdir,
+                                        workDir,
                                         args.nbam,
                                         args.bamdir,
                                         hla_alleles,
