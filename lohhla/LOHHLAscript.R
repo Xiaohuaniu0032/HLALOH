@@ -212,11 +212,19 @@ get.partially.matching.reads <- function(workDir, regionDir, BAMDir, BAMfile){
   system(cmd)
 
   # convert to bam
-  cmd <- paste()
+  sam <- paste(regionDir,'/fished.sam',sep='')
+  bam <- paste(regionDir,'/fished.bam',sep='')
+  cmd <- paste('samtools view -b -o ',bam,' ',sam,sep='')
+  system(cmd)
   # sort by name
-
+  bam_sort_by_name <- paste(regionDir,'/fished.sort_by_name',sep='')
+  sortbyname <- paste('samtools sort -n -o ',bam_sort_by_name,' ',bam,sep='')
+  system(sortbyname)
   # convert to fastq
-  cmd <- paste('java -jar ', GATKDir, '/SamToFastq.jar I=', regionDir, '/fished.sam F=', regionDir, '/fished.1.fastq F2=', regionDir, '/fished.2.fastq VALIDATION_STRINGENCY=SILENT', sep = '')
+  FQ1 <- paste(regionDir,'/fished.1.fastq',sep='')
+  FQ2 <- paste(regionDir,'/fished.2.fastq',sep='')
+  cmd <- paste('bedtools bamtofastq -i ',bam_sort_by_name,' -fq ',FQ1,' -fq2 ',FQ2,sep='')
+  #cmd <- paste('java -jar ', GATKDir, '/SamToFastq.jar I=', regionDir, '/fished.sam F=', regionDir, '/fished.1.fastq F2=', regionDir, '/fished.2.fastq VALIDATION_STRINGENCY=SILENT', sep = '')
   system(cmd)
 
 }
@@ -462,13 +470,23 @@ document.params(params, log.name)
 #############################
 
 BAMfiles  <- list.files(BAMDir, pattern = '.bam$')
+print("bamfile is:")
+print(BAMfiles)
 
 if(length(BAMfiles)<2)
 {
   stop(paste('Cannot find 2 bam files within ',BAMDir))
 }
 
-regions   <- sapply(BAMfiles, FUN =function(x) {return(unlist(strsplit(x, split = '.bam'))[1])})
+print("region is:")
+regions <- c()
+for (BAMfile in BAMfiles){
+  BAMid <- strsplit(basename(BAMfile),'.',fixed=TRUE)[[1]][1]
+  regions <- c(regions,BAMid)
+}
+
+#regions   <- sapply(BAMfiles, FUN =function(x) {return(unlist(strsplit(x, split = '.bam'))[1])})
+print(regions)
 
 hlaAlleles <- read.table(hlaPath, sep = '\t', header = FALSE, as.is = TRUE)
 if(ncol(hlaAlleles) == 3){
@@ -478,6 +496,9 @@ if(ncol(hlaAlleles) == 3){
     hlaAlleles <- unique(sort(hlaAlleles$V1))
   }
 }
+
+print("hla alleles are:")
+print(hlaAlleles)
 
 hlaFasta   <- read.fasta(HLAfastaLoc)
 
@@ -539,7 +560,7 @@ if(mapping.step){
   for(BAMfile in BAMfiles){
     
     #BAMid <- unlist(strsplit(BAMfile, split = '.bam'))[1] # sample name
-    BAMid <- strsplit(basename(bam),'.',fixed=TRUE)[[1]][1]
+    BAMid <- strsplit(basename(BAMfile),'.',fixed=TRUE)[[1]][1]
 
     if(paste(BAMDir, '/', BAMfile, sep = '') == normalBAMfile){
       normalName <- BAMid
@@ -720,6 +741,7 @@ if(mapping.step){
 ############################
 # get coverage for regions # 
 ############################
+normal_name <- strsplit(basename(normalBAMfile),'.',fixed=TRUE)[[1]][1]
 
 for (region in regions)
 {
@@ -727,11 +749,20 @@ for (region in regions)
   write.table(paste('\nget coverage of HLA alleles for region: ', region, ' at ', date(), '\n', sep = ''), file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
   
   regionDir <- paste(workDir, '/', region, sep = '')
-  BAMfiles  <- grep('filtered.bam$', grep('type',list.files(regionDir),value=TRUE),value=TRUE)
+  # the region is the sample name...
+  #BAMfiles  <- grep('filtered.bam$', grep('type',list.files(regionDir),value=TRUE),value=TRUE)
+  #BAMfiles <- list.files(regionDir,pattern="filtered.bam$",full.names = TRUE) # abs path (six bam files)
+  BAMfiles <- list.files(regionDir,pattern="filtered.bam$")
 
-  if(paste(BAMDir, '/', region, '.bam', sep = '') == normalBAMfile){
+  #if(paste(BAMDir, '/', region, '.bam', sep = '') == normalBAMfile){
+  #  type <- 'normal'
+  #} else{
+  #  type <- 'tumor'
+  #}
+
+  if (region == normal_name){
     type <- 'normal'
-  } else{
+  }else{
     type <- 'tumor'
   }
   
@@ -739,7 +770,7 @@ for (region in regions)
   for (BAMfile in c(BAMfiles))
   {      
     
-    hlaAllele <- grep(pattern = 'hla', x = unlist(strsplit(BAMfile, split = '\\.')), value = TRUE)
+    hlaAllele <- grep(pattern = 'hla', x = unlist(strsplit(BAMfile, split = '\\.')), value = TRUE) # hla value
 
     mpileupFile <- paste(workDir, '/', region,".",hlaAllele,".",type,".mpileup",sep="")
     
@@ -750,14 +781,13 @@ for (region in regions)
     system(cmd)
     
   }
-
 }
 
 # also extract number of unique reads sequenced in tumor and normal
 if(runWithNormal){
 
-  normalName <- regions[which(paste(BAMDir, '/', regions, '.bam', sep = '') == normalBAMfile)]
-  
+  #normalName <- regions[which(paste(BAMDir, '/', regions, '.bam', sep = '') == normalBAMfile)]
+  normalName <- normal_name
   if(!override){
     regionUniqMappedRegions <- getUniqMapReads(workDir = workDir, BAMDir = BAMDir, override = FALSE)
   }
@@ -777,8 +807,8 @@ if(runWithNormal){
 # compare coverage between alleles # 
 ####################################
 
-normalName <- regions[which(paste(BAMDir, '/', regions, '.bam', sep = '') == normalBAMfile)]
-
+#normalName <- regions[which(paste(BAMDir, '/', regions, '.bam', sep = '') == normalBAMfile)]
+normalName <- normal_name
 # let's load the winners
 # next, we can look at each mpileupFile, and assess whether we see differences in coverage between the two. 
 # let's look at a region of interest. 
@@ -786,10 +816,13 @@ PatientOutPut <- c()
 
 for (region in regions)
 {
-
-  if(paste(BAMDir, '/', region, '.bam', sep = '') == normalBAMfile){
+  if (region == normalName){
+    # skip normal file
     next
   }
+  #if(paste(BAMDir, '/', region, '.bam', sep = '') == normalBAMfile){
+  #  next
+  #}
   
   print(region)
 
@@ -824,6 +857,7 @@ for (region in regions)
       if(length(HLA_As)<=1)
       {
         next
+        # skip gene with two same alleles
       }
       HLA_A_type1 <- HLA_As[1]
       HLA_A_type2 <- HLA_As[2]
@@ -1516,7 +1550,7 @@ for (region in regions)
     pdf(paste(figureDir, '/', region,".minCoverage_",minCoverageFilter,".HLA.pdf",sep=""),width=10,height=6)
     for (HLA_gene in unique(substr(hlaAlleles, 1,5)))
     {
-
+      # hla_a/hla_b/hla_c
       if(file.exists(paste(figureDir, '/', region, '.', HLA_gene, '.tmp.data.plots.RData', sep = ''))){
         load(paste(figureDir, '/', region, '.', HLA_gene, '.tmp.data.plots.RData', sep = ''))
       } else{
