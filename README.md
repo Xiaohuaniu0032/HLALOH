@@ -52,3 +52,9 @@ optional arguments:
 ## Testing
 
 ## Software Needed
+1. lohhla
+    * novoindex
+    * Jellyfish (https://www.cbcb.umd.edu/software/jellyfish/, a fast k-mer counting tool for DNA)
+    `conda install -c bioconda jellyfish`
+    `which jellyfish`
+    * 
