@@ -253,6 +253,13 @@ def main():
                                         )
     of.write('\n'+"###detect HLA LOH by lohhla software"+'\n')
     of.write(cmd+'\n')
+
+
+    # final result file
+    final_res = "%s/final_hla.xls" % (args.outdir)
+    lohhla_res = glob.glob("%s/lohhla/*.HLAlossPrediction_CI.xls" % (args.outdir))[0]
+    cmd = "%s %s/tools/summary_hlaloh_result.pl -res %s -hla %s -o %s" % (perl,bin_dir,lohhla_res,hla_alleles,final_res)
+    of.write(cmd+'\n')
     of.close()
 
 
