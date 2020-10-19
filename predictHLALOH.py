@@ -16,6 +16,7 @@ def parse_args():
     AP.add_argument('-ref',help='cnv ref control dir',dest='ref')
     AP.add_argument('-gatkDir',help='gatk dir',dest='gatkDir')
     AP.add_argument('-novoDir',help='novoalign bin dir',dest='novoDir')
+    AP.add_argument('-p',help='panel, can be <889|338>',dest='panel')
     AP.add_argument('-od',help='output dir',dest='outdir')
 
     return AP.parse_args()
@@ -44,6 +45,22 @@ def main():
     runsh = "%s/%s.HLALOH.sh" % (args.outdir,args.tname)
     of = open(runsh,'w')
 
+
+    # cal snp vaf for tumor to visually estimate tumor's purity and ploidy
+    of.write("###cal tumor snp vaf"+'\n')
+    if args.panel == 889:
+        snp_bed = "%s/BAF/889gene.snp.bed" % (args.outdir)
+    elif args.panel == 338:
+        snp_bed = "%s/BAF/338gene.snp.bed" % (args.outdir)
+    else:
+        snp_bed = "NA"
+
+    snp_vaf = "%s/tumor.snp.vaf" % (args.outdir)
+    cmd = "%s %s/BAF/pileup2vaf.v2.py -bam %s -bed %s -outfile %s" % (py3,bin_dir,args.tbam,snp_bed,snp_vaf)
+    or.write(cmd+'\n')
+
+    # plot fig
+    
     # extract HLA region read1/read2
     of.write("###extract HLA reads"+'\n')
     extract_HLA_reads(args.nbam,
@@ -238,7 +255,7 @@ def main():
     workDir = "%s/lohhla" % (args.outdir) # make a deeper dir to store lohhla result
     if not os.path.exists(workDir):
         os.mkdir(workDir)
-    cmd = '%s %s/lohhla/LOHHLAscript.R --patientId %s --outputDir %s --normalBAMfile %s --BAMDir %s --hlaPath %s --HLAfastaLoc %s --CopyNumLoc %s --mappingStep TRUE --minCoverageFilter 10 --fishingStep TRUE --cleanUp FALSE --gatkDir %s --novoDir %s --HLAexonLoc %s' % (rscript,
+    cmd = '%s %s/lohhla/LOHHLAscript.R --patientId %s --outputDir %s --normalBAMfile %s --BAMDir %s --hlaPath %s --HLAfastaLoc %s --CopyNumLoc %s --mappingStep TRUE --minCoverageFilter 10 --fishingStep TRUE --cleanUp FALSE --gatkDir %s --novoDir %s --HLAexonLoc %s --plottingStep %s' % (rscript,
                                         bin_dir,
                                         args.tname,
                                         workDir,
@@ -249,7 +266,7 @@ def main():
                                         pp,
                                         args.gatkDir,
                                         args.novoDir,
-                                        hla_db
+                                        hla_db,"FALSE"
                                         )
     of.write('\n'+"###detect HLA LOH by lohhla software"+'\n')
     of.write(cmd+'\n')
