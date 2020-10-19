@@ -228,7 +228,7 @@ def main():
 
     # re-format ASCAT
     pp = "%s/purity_ploidy_estimate_by_ASCAT.txt" % (args.outdir)
-    cmd = "%s %s/tools/reformat_ASCAT.pl %s %s" % (perl,bin_dir,ascatPurityPloidyFile,pp)
+    cmd = "%s %s/tools/reformat_ASCAT.pl %s %s %s" % (perl,bin_dir,ascatPurityPloidyFile,args.tname,pp)
     of.write(cmd+'\n')
 
     # HLA LOH main script

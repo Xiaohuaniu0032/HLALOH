@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-my ($in,$out) = @ARGV;
+my ($in,$tname,$out) = @ARGV;
 
 my ($purity,$ploidy);
 open IN, "$in" or die;
@@ -14,5 +14,5 @@ $ploidy = sprintf "%.2f", (split /\s+/, $v2)[1];
 
 open O, ">$out" or die;
 print O "Ploidy\ttumorPurity\ttumorPloidy\n";
-print O "example_tumor_sorted\t$ploidy\t$purity\t$ploidy\n";
+print O "$tname\t$ploidy\t$purity\t$ploidy\n";
 close O;
