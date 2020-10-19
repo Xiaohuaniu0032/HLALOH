@@ -869,12 +869,18 @@ for (region in regions)
       #perform local pairwise alignement
       {
         seq1 <- PasteVector(toupper(HLA_type1Fasta),sep="")
+        print("seq1 is:")
+        print(seq1)
         seq2 <- PasteVector(toupper(HLA_type2Fasta),sep="")
         sigma <- nucleotideSubstitutionMatrix(match = 2, mismatch = -1, baseOnly = TRUE)
         
         tmp <- pairwiseAlignment(seq1, seq2, substitutionMatrix = sigma, gapOpening = -2,gapExtension = -4, scoreOnly = FALSE,type='local')
+        print("align info is:")
+        print(tmp)
         
         missMatchPositions <- getMisMatchPositionsPairwiseAlignment(tmp,returnlist=TRUE)
+        print("missMatchPositions is:")
+        print(missMatchPositions)
         if(length(missMatchPositions$diffSeq1) == 0){
           next
         }
