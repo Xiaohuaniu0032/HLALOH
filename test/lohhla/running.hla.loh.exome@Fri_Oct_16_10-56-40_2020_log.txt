@@ -1,0 +1,178 @@
+
+####################### 
+####### Inputs ######## 
+#######################
+full.patient	20091701T	
+workDir	/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla	
+hlaPath	/home/fulongfei/workdir/git_repo/HLALOH/test/hla.result.new	
+normalBAMfile	/home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701N.sort.bam	
+BAMDir	/home/fulongfei/workdir/hla_loh/program_test/downsample_bam	
+HLAfastaLoc	/home/fulongfei/workdir/git_repo/HLALOH/test/patient.hla.fa	
+CopyNumLoc	/home/fulongfei/workdir/git_repo/HLALOH/test/purity_ploidy_estimate_by_ASCAT.txt	
+GATKDir	/home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119	
+NOVODir	/home/fulongfei/workdir/git_repo/HLALOH/novoDir/novocraft	
+
+
+generate patient reference fasta at Fri Oct 16 10:56:40 2020
+
+
+nix file for patient reference fasta at Fri Oct 16 10:56:40 2020
+
+/home/fulongfei/workdir/git_repo/HLALOH/novoDir/novocraft/novoindex /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T.patient.hlaFasta.nix /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T.patient.hlaFasta.fa
+
+create kmer file at Fri Oct 16 10:56:40 2020
+
+
+extract HLA possible reads from BAM file at Fri Oct 16 10:56:41 2020
+
+samtools view -H /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701N.sort.bam > /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.sam
+samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701N.sort.bam 6:29909037-29913661 >> /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.sam
+samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701N.sort.bam 6:31321649-31324964 >> /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.sam
+samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701N.sort.bam 6:31236526-31239869 >> /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.sam
+
+turn into fastq at Fri Oct 16 10:56:42 2020
+
+bedtools bamtofastq -i /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.sort_by_name.bam -fq /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.1.fastq -fq2 /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.2.fastq
+
+get partially matching reads and turn fished sam into fastq at Fri Oct 16 10:56:42 2020
+
+
+combine chr6 reads with fished reads at Fri Oct 16 10:56:49 2020
+
+
+align to all HLA alleles at Fri Oct 16 10:56:49 2020
+
+/home/fulongfei/workdir/git_repo/HLALOH/novoDir/novocraft/novoalign -d /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T.patient.hlaFasta.nix -f /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.1.fastq /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.2.fastq -F STDFQ -R 0 -r All 9999 -o SAM -o FullNW 1> /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.sam 2> /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N_BS_GL.chr6region.patient.reference.hlas.metrics
+samtools view -bS -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.sam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/SortSam.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.bam O=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.csorted.bam SORT_ORDER=coordinate
+samtools rmdup /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.csorted.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.csorted.noduplicates.bam
+samtools view -f 2 -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.csorted.noduplicates.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam
+
+get HLA specific SAM for allele: hla_a_01_01 at Fri Oct 16 10:56:51 2020
+
+samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.temp.hla_a_01_01.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam hla_a_01_01
+samtools sort /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.temp.hla_a_01_01.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_a_01_01.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_a_01_01.bam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/FilterSamReads.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_a_01_01.bam FILTER=includeReadList READ_LIST_FILE=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.hla_a_01_01.passed.reads.txt OUTPUT=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_a_01_01.filtered.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_a_01_01.filtered.bam
+
+get HLA specific SAM for allele: hla_a_24_02 at Fri Oct 16 10:56:52 2020
+
+samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.temp.hla_a_24_02.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam hla_a_24_02
+samtools sort /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.temp.hla_a_24_02.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_a_24_02.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_a_24_02.bam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/FilterSamReads.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_a_24_02.bam FILTER=includeReadList READ_LIST_FILE=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.hla_a_24_02.passed.reads.txt OUTPUT=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_a_24_02.filtered.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_a_24_02.filtered.bam
+
+get HLA specific SAM for allele: hla_b_15_11 at Fri Oct 16 10:56:52 2020
+
+samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.temp.hla_b_15_11.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam hla_b_15_11
+samtools sort /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.temp.hla_b_15_11.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_b_15_11.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_b_15_11.bam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/FilterSamReads.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_b_15_11.bam FILTER=includeReadList READ_LIST_FILE=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.hla_b_15_11.passed.reads.txt OUTPUT=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_b_15_11.filtered.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_b_15_11.filtered.bam
+
+get HLA specific SAM for allele: hla_b_57_01 at Fri Oct 16 10:56:53 2020
+
+samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.temp.hla_b_57_01.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam hla_b_57_01
+samtools sort /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.temp.hla_b_57_01.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_b_57_01.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_b_57_01.bam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/FilterSamReads.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_b_57_01.bam FILTER=includeReadList READ_LIST_FILE=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.hla_b_57_01.passed.reads.txt OUTPUT=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_b_57_01.filtered.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_b_57_01.filtered.bam
+
+get HLA specific SAM for allele: hla_c_03_03 at Fri Oct 16 10:56:54 2020
+
+samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.temp.hla_c_03_03.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam hla_c_03_03
+samtools sort /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.temp.hla_c_03_03.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_c_03_03.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_c_03_03.bam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/FilterSamReads.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_c_03_03.bam FILTER=includeReadList READ_LIST_FILE=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.hla_c_03_03.passed.reads.txt OUTPUT=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_c_03_03.filtered.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_c_03_03.filtered.bam
+
+get HLA specific SAM for allele: hla_c_06_02 at Fri Oct 16 10:56:54 2020
+
+samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.temp.hla_c_06_02.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam hla_c_06_02
+samtools sort /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.temp.hla_c_06_02.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_c_06_02.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_c_06_02.bam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/FilterSamReads.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_c_06_02.bam FILTER=includeReadList READ_LIST_FILE=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.hla_c_06_02.passed.reads.txt OUTPUT=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_c_06_02.filtered.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.type.hla_c_06_02.filtered.bam
+
+extract HLA possible reads from BAM file at Fri Oct 16 10:56:55 2020
+
+samtools view -H /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam > /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.sam
+samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam 6:29909037-29913661 >> /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.sam
+samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam 6:31321649-31324964 >> /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.sam
+samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam 6:31236526-31239869 >> /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.sam
+
+turn into fastq at Fri Oct 16 10:56:55 2020
+
+bedtools bamtofastq -i /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.sort_by_name.bam -fq /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.1.fastq -fq2 /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.2.fastq
+
+get partially matching reads and turn fished sam into fastq at Fri Oct 16 10:56:55 2020
+
+
+combine chr6 reads with fished reads at Fri Oct 16 10:57:05 2020
+
+
+align to all HLA alleles at Fri Oct 16 10:57:06 2020
+
+/home/fulongfei/workdir/git_repo/HLALOH/novoDir/novocraft/novoalign -d /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T.patient.hlaFasta.nix -f /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.1.fastq /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.2.fastq -F STDFQ -R 0 -r All 9999 -o SAM -o FullNW 1> /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.sam 2> /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T_BS_GL.chr6region.patient.reference.hlas.metrics
+samtools view -bS -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.sam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/SortSam.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.bam O=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.csorted.bam SORT_ORDER=coordinate
+samtools rmdup /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.csorted.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.csorted.noduplicates.bam
+samtools view -f 2 -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.csorted.noduplicates.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam
+
+get HLA specific SAM for allele: hla_a_01_01 at Fri Oct 16 10:57:13 2020
+
+samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.temp.hla_a_01_01.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam hla_a_01_01
+samtools sort /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.temp.hla_a_01_01.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_a_01_01.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_a_01_01.bam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/FilterSamReads.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_a_01_01.bam FILTER=includeReadList READ_LIST_FILE=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.hla_a_01_01.passed.reads.txt OUTPUT=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_a_01_01.filtered.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_a_01_01.filtered.bam
+
+get HLA specific SAM for allele: hla_a_24_02 at Fri Oct 16 10:57:13 2020
+
+samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.temp.hla_a_24_02.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam hla_a_24_02
+samtools sort /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.temp.hla_a_24_02.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_a_24_02.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_a_24_02.bam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/FilterSamReads.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_a_24_02.bam FILTER=includeReadList READ_LIST_FILE=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.hla_a_24_02.passed.reads.txt OUTPUT=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_a_24_02.filtered.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_a_24_02.filtered.bam
+
+get HLA specific SAM for allele: hla_b_15_11 at Fri Oct 16 10:57:14 2020
+
+samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.temp.hla_b_15_11.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam hla_b_15_11
+samtools sort /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.temp.hla_b_15_11.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_b_15_11.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_b_15_11.bam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/FilterSamReads.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_b_15_11.bam FILTER=includeReadList READ_LIST_FILE=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.hla_b_15_11.passed.reads.txt OUTPUT=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_b_15_11.filtered.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_b_15_11.filtered.bam
+
+get HLA specific SAM for allele: hla_b_57_01 at Fri Oct 16 10:57:14 2020
+
+samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.temp.hla_b_57_01.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam hla_b_57_01
+samtools sort /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.temp.hla_b_57_01.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_b_57_01.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_b_57_01.bam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/FilterSamReads.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_b_57_01.bam FILTER=includeReadList READ_LIST_FILE=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.hla_b_57_01.passed.reads.txt OUTPUT=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_b_57_01.filtered.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_b_57_01.filtered.bam
+
+get HLA specific SAM for allele: hla_c_03_03 at Fri Oct 16 10:57:15 2020
+
+samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.temp.hla_c_03_03.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam hla_c_03_03
+samtools sort /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.temp.hla_c_03_03.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_c_03_03.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_c_03_03.bam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/FilterSamReads.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_c_03_03.bam FILTER=includeReadList READ_LIST_FILE=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.hla_c_03_03.passed.reads.txt OUTPUT=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_c_03_03.filtered.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_c_03_03.filtered.bam
+
+get HLA specific SAM for allele: hla_c_06_02 at Fri Oct 16 10:57:15 2020
+
+samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.temp.hla_c_06_02.bam /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam hla_c_06_02
+samtools sort /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.temp.hla_c_06_02.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_c_06_02.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_c_06_02.bam
+java -jar /home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119/FilterSamReads.jar I=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_c_06_02.bam FILTER=includeReadList READ_LIST_FILE=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.hla_c_06_02.passed.reads.txt OUTPUT=/home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_c_06_02.filtered.bam
+samtools index /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T/20091701T.type.hla_c_06_02.filtered.bam
+
+get coverage of HLA alleles for region: 20091701N.sort at Fri Oct 16 10:57:16 2020
+
+
+get coverage of HLA alleles for region: 20091701T.sort at Fri Oct 16 10:57:16 2020
+
