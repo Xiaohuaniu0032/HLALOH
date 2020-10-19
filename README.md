@@ -50,11 +50,24 @@ optional arguments:
 
 
 ## Testing
+1. `sh run.sh`
+2. `sh 20091701T.HLALOH.sh`
 
 ## Software Needed
 1. lohhla
     * novoindex
-    * Jellyfish (https://www.cbcb.umd.edu/software/jellyfish/, a fast k-mer counting tool for DNA)
-    `conda install -c bioconda jellyfish`
-    `which jellyfish`
-    * 
+    * Jellyfish (https://www.cbcb.umd.edu/software/jellyfish/, a fast k-mer counting tool for DNA, you can use conda to install it. `conda install -c bioconda jellyfish`)
+    * bedtools (you need to add binary path into you $PATH)
+    * samtools (same as bedtools)
+    * picard (SortSam.jar,FilterSamReads.jar)
+    * R
+2. ASCAT
+    * R package: ASCAT
+3. CNVscan
+    * bedtools
+    * sambamba
+4. OptiType
+    * razers3
+    * glpk
+5. BAF
+    * pysam
