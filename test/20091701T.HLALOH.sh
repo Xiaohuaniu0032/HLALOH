@@ -1,5 +1,6 @@
 ###cal tumor snp vaf
-/home/fulongfei/miniconda3/bin/python3 /data1/workdir/fulongfei/git_repo/HLALOH/BAF/pileup2vaf.v2.py -bam /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam -bed /data1/workdir/fulongfei/git_repo/HLALOH/BAF/889gene.snp.bed -outfile /home/fulongfei/workdir/git_repo/HLALOH/test/tumor.snp.vaf
+/home/fulongfei/miniconda3/bin/samtools mpileup -d 8000 -f /data1/database/b37/human_g1k_v37.fasta -l /data1/workdir/fulongfei/git_repo/HLALOH/BAF/889gene.snp.bed /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam >/home/fulongfei/workdir/git_repo/HLALOH/test/tumor.mpileup
+/home/fulongfei/miniconda3/bin/python3 /data1/workdir/fulongfei/git_repo/HLALOH/BAF/pileup2vaf.py /home/fulongfei/workdir/git_repo/HLALOH/test/tumor.mpileup /home/fulongfei/workdir/git_repo/HLALOH/test/tumor.snp.vaf
 /home/fulongfei/miniconda3/bin/Rscript /data1/workdir/fulongfei/git_repo/HLALOH/BAF/plot_vaf_by_chr.r /home/fulongfei/workdir/git_repo/HLALOH/test/tumor.snp.vaf 20091701T /home/fulongfei/workdir/git_repo/HLALOH/test
 
 ###extract HLA reads
@@ -20,12 +21,14 @@ cp /home/fulongfei/workdir/git_repo/HLALOH/test/*/*_result.tsv /home/fulongfei/w
 /home/fulongfei/miniconda3/bin/python3 /data1/workdir/fulongfei/git_repo/HLALOH/tools/get_hla_fasta.py -i /home/fulongfei/workdir/git_repo/HLALOH/test/hla.result.raw -o /home/fulongfei/workdir/git_repo/HLALOH/test/patient.hla.fa
 
 ###cal BAF for normal
-/home/fulongfei/miniconda3/bin/python3 /data1/workdir/fulongfei/git_repo/HLALOH/BAF/pileup2vaf.v2.py -bam /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701N.sort.bam -bed /home/wangce/workdir/database/humandb/panel/889genes_20191225.bed -outfile /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.normal.vaf
+/home/fulongfei/miniconda3/bin/samtools mpileup -d 8000 -f /data1/database/b37/human_g1k_v37.fasta -l /home/wangce/workdir/database/humandb/panel/889genes_20191225.bed /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701N.sort.bam >/home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.normal.pileup
+/home/fulongfei/miniconda3/bin/python3 /data1/workdir/fulongfei/git_repo/HLALOH/BAF/pileup2vaf.py /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.normal.pileup /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.normal.vaf
 
 ###cal BAF for tumor
-/home/fulongfei/miniconda3/bin/python3 /data1/workdir/fulongfei/git_repo/HLALOH/BAF/pileup2vaf.v2.py -bam /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam -bed /home/wangce/workdir/database/humandb/panel/889genes_20191225.bed -outfile /home/fulongfei/workdir/git_repo/HLALOH/test/20091701T.tumor.vaf
+/home/fulongfei/miniconda3/bin/samtools mpileup -d 8000 -f /data1/database/b37/human_g1k_v37.fasta -l /home/wangce/workdir/database/humandb/panel/889genes_20191225.bed /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam >/home/fulongfei/workdir/git_repo/HLALOH/test/20091701T.tumor.pileup
+/home/fulongfei/miniconda3/bin/python3 /data1/workdir/fulongfei/git_repo/HLALOH/BAF/pileup2vaf.py /home/fulongfei/workdir/git_repo/HLALOH/test/20091701T.tumor.pileup /home/fulongfei/workdir/git_repo/HLALOH/test/20091701T.tumor.vaf
 
-###get tumor & normal overlapped BAF sites
+###get tumor && normal overlapped BAF sites
 /home/fulongfei/miniconda3/bin/perl /data1/workdir/fulongfei/git_repo/HLALOH/tools/tumor_normal_overlap_BAF.pl -nvaf /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.normal.vaf -tvaf /home/fulongfei/workdir/git_repo/HLALOH/test/20091701T.tumor.vaf -od /home/fulongfei/workdir/git_repo/HLALOH/test
 
 ### call CNV for normal
@@ -52,9 +55,11 @@ cp /home/fulongfei/workdir/git_repo/HLALOH/test/*/*_result.tsv /home/fulongfei/w
 ###make ascat logR for normal
 /home/fulongfei/miniconda3/bin/perl /data1/workdir/fulongfei/git_repo/HLALOH/tools/ascatLogR.pl /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.normal.overlap.vaf /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.logR.xls /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.ascat.logR.xls
 
-###re-format BAF
-/home/fulongfei/miniconda3/bin/perl /data1/workdir/fulongfei/git_repo/HLALOH/tools/ascatBAF.pl /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.normal.overlap.vaf /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.ascat.BAF.xls
+###make ascat BAF for tumor
 /home/fulongfei/miniconda3/bin/perl /data1/workdir/fulongfei/git_repo/HLALOH/tools/ascatBAF.pl /home/fulongfei/workdir/git_repo/HLALOH/test/20091701T.tumor.overlap.vaf /home/fulongfei/workdir/git_repo/HLALOH/test/20091701T.ascat.BAF.xls
+
+###make ascat BAF for normal
+/home/fulongfei/miniconda3/bin/perl /data1/workdir/fulongfei/git_repo/HLALOH/tools/ascatBAF.pl /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.normal.overlap.vaf /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.ascat.BAF.xls
 
 ###estimate tumor purity & ploidy By ASCAT
 /home/fulongfei/miniconda3/bin/Rscript /data1/workdir/fulongfei/git_repo/HLALOH/tools/ascat.r /home/fulongfei/workdir/git_repo/HLALOH/test/20091701T.ascat.BAF.xls /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.ascat.BAF.xls /home/fulongfei/workdir/git_repo/HLALOH/test/20091701T.ascat.logR.xls /home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.ascat.logR.xls /home/fulongfei/workdir/git_repo/HLALOH/test/PurityPloidyEst.txt
