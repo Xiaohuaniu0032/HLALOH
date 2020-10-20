@@ -45,6 +45,26 @@ def main():
     runsh = "%s/%s.HLALOH.sh" % (args.outdir,args.tname)
     of = open(runsh,'w')
 
+    # make a bamDIR to store this sample's tumor and normal bam
+    bamdir = "%s/bamdir" % (args.outdir)
+    if not os.path.exists(bamdir):
+        os.mkdir(bamdir)
+
+
+    cmd = "ln -f -s %s %s" % (args.nbam,bamdir)
+    os.system(cmd)
+
+    nbam_idx = "%s.bai" % (args.nbam)
+    cmd = "ln -f -s %s %s" % (nbam_idx,bamdir)
+    os.system(cmd)
+
+
+    cmd = "ln -f -s %s %s" % (args.tbam,bamdir)
+    os.system(cmd)
+
+    tbam_idx = "%s.bai" % (args.tbam)
+    cmd = "ln -f -s %s %s" % (tbam_idx,bamdir)
+    os.system(cmd)
 
     # cal snp vaf for tumor to visually estimate tumor's purity and ploidy
     of.write("###cal tumor snp vaf"+'\n')
@@ -262,7 +282,7 @@ def main():
                                         args.tname,
                                         workDir,
                                         args.nbam,
-                                        args.bamdir,
+                                        bamdir,
                                         hla_alleles,
                                         hla_fa,
                                         pp,
