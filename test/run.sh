@@ -13,4 +13,4 @@ gatkdir='/home/fulongfei/workdir/git_repo/HLALOH/gatkDir/picard-tools-1.119'
 #ref='/home/fulongfei/workdir/git_repo/HLALOH/CNVscan/ref/889/DB'
 ref='/home/fulongfei/workdir/git_repo/HLALOH/DB/cnv_ref/889/DB'
 
-/home/fulongfei/miniconda3/bin/python3 ../predictHLALOH.py -nbam $nbam -tbam $tbam -bamDir $bamdir -bed $bed -nname 20091701N -tname 20091701T -ref $ref -gatkDir $gatkdir -od $PWD -novoDir /home/fulongfei/workdir/git_repo/HLALOH/novoDir/novocraft
+/home/fulongfei/miniconda3/bin/python3 ../predictHLALOH.py -nbam $nbam -tbam $tbam -bamDir $bamdir -bed $bed -nname 20091701N -tname 20091701T -ref $ref -gatkDir $gatkdir -od $PWD -novoDir /home/fulongfei/workdir/git_repo/HLALOH/novoDir/novocraft -p 889
