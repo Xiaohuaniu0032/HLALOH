@@ -296,7 +296,8 @@ def main():
 
     # final result file
     final_res = "%s/final_hla.xls" % (args.outdir)
-    lohhla_res = glob.glob("%s/lohhla/*.HLAlossPrediction_CI.xls" % (args.outdir))[0]
+    #lohhla_res = glob.glob("%s/lohhla/*.HLAlossPrediction_CI.xls" % (args.outdir))[0]
+    lohhla_res = "%s/lohhla/%s.%s.%s.HLAlossPrediction_CI.xls" % (args.outdir,args.tname,'10','DNA')
     cmd = "%s %s/tools/summary_hlaloh_result.pl -res %s -hla %s -o %s" % (perl,bin_dir,lohhla_res,hla_alleles,final_res)
     of.write(cmd+'\n')
     of.close()
