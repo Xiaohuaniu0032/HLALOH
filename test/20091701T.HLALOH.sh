@@ -1,3 +1,7 @@
+###cal tumor snp vaf
+/home/fulongfei/miniconda3/bin/python3 /data1/workdir/fulongfei/git_repo/HLALOH/BAF/pileup2vaf.v2.py -bam /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam -bed /data1/workdir/fulongfei/git_repo/HLALOH/BAF/889gene.snp.bed -outfile /home/fulongfei/workdir/git_repo/HLALOH/test/tumor.snp.vaf
+/home/fulongfei/miniconda3/bin/Rscript /data1/workdir/fulongfei/git_repo/HLALOH/BAF/plot_vaf_by_chr.r /home/fulongfei/workdir/git_repo/HLALOH/test/tumor.snp.vaf 20091701T /home/fulongfei/workdir/git_repo/HLALOH/test
+
 ###extract HLA reads
 /home/fulongfei/miniconda3/bin/samtools view -H /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701N.sort.bam >/home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.hla.sam
 /home/fulongfei/miniconda3/bin/samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701N.sort.bam 6:29909037-29913661 >>/home/fulongfei/workdir/git_repo/HLALOH/test/20091701N.hla.sam
