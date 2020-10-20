@@ -76,7 +76,11 @@ def main():
         snp_bed = "NA"
 
     snp_vaf = "%s/tumor.snp.vaf" % (args.outdir)
-    cmd = "%s %s/BAF/pileup2vaf.v2.py -bam %s -bed %s -outfile %s" % (py3,bin_dir,args.tbam,snp_bed,snp_vaf)
+    tumor_pileup = "%s/tumor.mpileup" % (args.outdir)
+    #cmd = "%s %s/BAF/pileup2vaf.v2.py -bam %s -bed %s -outfile %s" % (py3,bin_dir,args.tbam,snp_bed,snp_vaf)
+    cmd = "%s mpileup -d 8000 -f %s -l %s %s >%s" % (samtools,args.fasta,snp_bed,args.tbam,tumor_pileup)
+    of.write(cmd+'\n')
+    cmd = "%s %s/BAF/pileup2vaf.py %s %s" % (py3,bin_dir,tumor_pileup,snp_vaf)
     of.write(cmd+'\n')
 
     # plot fig
@@ -136,27 +140,44 @@ def main():
     nvaf = "%s/%s.normal.vaf" % (args.outdir,args.nname)
     tvaf = "%s/%s.tumor.vaf" % (args.outdir,args.tname)
 
-    cmd = "%s %s/BAF/pileup2vaf.v2.py -bam %s -bed %s -outfile %s" % (py3,
-                                                                        bin_dir,
-                                                                        args.nbam,
-                                                                        args.bed,
-                                                                        nvaf
-                                                                        )
+    tumor_pileup = "%s/%s.tumor.pileup" % (args.outdir,args.tname)
+    normal_pileup = "%s/%s.normal.pileup" % (args.outdir,args.nname)
+
     of.write('\n'+"###cal BAF for normal"+'\n')
+    cmd = "%s mpileup -d 8000 -f %s -l %s %s >%s" % (samtools,args.fasta,args.bed,args.nbam,normal_pileup)
     of.write(cmd+'\n')
 
-    cmd = "%s %s/BAF/pileup2vaf.v2.py -bam %s -bed %s -outfile %s" % (py3,
-                                                                        bin_dir,
-                                                                        args.tbam,
-                                                                        args.bed,
-                                                                        tvaf
-                                                                        )
-    of.write('\n'+"###cal BAF for tumor"+'\n')
+    cmd = "%s %s/BAF/pileup2vaf.py %s %s" % (py3,bin_dir,normal_pileup,nvaf)
     of.write(cmd+'\n')
+
+    of.write('\n'+"###cal BAF for tumor"+'\n')
+    cmd = "%s mpileup -d 8000 -f %s -l %s %s >%s" % (samtools,args.fasta,args.bed,args.tbam,tumor_pileup)
+    of.write(cmd+'\n')
+
+    cmd = "%s %s/BAF/pileup2vaf.py %s %s" % (py3,bin_dir,tumor_pileup,tvaf)
+    of.write(cmd+'\n')
+    
+    #cmd = "%s %s/BAF/pileup2vaf.v2.py -bam %s -bed %s -outfile %s" % (py3,
+    #                                                                    bin_dir,
+    #                                                                    args.nbam,
+    #                                                                    args.bed,
+    #                                                                    nvaf
+    #                                                                    )
+    
+    
+
+    #cmd = "%s %s/BAF/pileup2vaf.v2.py -bam %s -bed %s -outfile %s" % (py3,
+    #                                                                    bin_dir,
+    #                                                                    args.tbam,
+    #                                                                    args.bed,
+    #                                                                    tvaf
+    #                                                                    )
+
+
 
     # get tumor & normal overlap BAF sites
+    of.write('\n'+"###get tumor && normal overlapped BAF sites"+'\n')
     cmd = "%s %s/tools/tumor_normal_overlap_BAF.pl -nvaf %s -tvaf %s -od %s" % (perl,bin_dir,nvaf,tvaf,args.outdir)
-    of.write('\n'+"###get tumor & normal overlapped BAF sites"+'\n')
     of.write(cmd+'\n')
 
 
@@ -247,16 +268,16 @@ def main():
 
 
     ### get ascat.BAF file
-    of.write('\n'+"###re-format BAF"+'\n')
     t_baf_ascat = "%s/%s.ascat.BAF.xls" % (args.outdir,args.tname)
     n_baf_ascat = "%s/%s.ascat.BAF.xls" % (args.outdir,args.nname)
 
-    cmd = "%s %s/tools/ascatBAF.pl %s %s" % (perl,bin_dir,n_vaf,n_baf_ascat)
-    of.write(cmd+'\n')
-
+    of.write('\n'+"###make ascat BAF for tumor"+'\n')
     cmd = "%s %s/tools/ascatBAF.pl %s %s" % (perl,bin_dir,t_vaf,t_baf_ascat)
     of.write(cmd+'\n')
 
+    of.write('\n'+"###make ascat BAF for normal"+'\n')
+    cmd = "%s %s/tools/ascatBAF.pl %s %s" % (perl,bin_dir,n_vaf,n_baf_ascat)
+    of.write(cmd+'\n')
 
     # ASCAT
     ascatPurityPloidyFile = "%s/PurityPloidyEst.txt" % (args.outdir)
