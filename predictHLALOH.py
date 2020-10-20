@@ -48,19 +48,21 @@ def main():
 
     # cal snp vaf for tumor to visually estimate tumor's purity and ploidy
     of.write("###cal tumor snp vaf"+'\n')
-    if args.panel == 889:
-        snp_bed = "%s/BAF/889gene.snp.bed" % (args.outdir)
-    elif args.panel == 338:
-        snp_bed = "%s/BAF/338gene.snp.bed" % (args.outdir)
+    if args.panel == '889':
+        snp_bed = "%s/BAF/889gene.snp.bed" % (bin_dir)
+    elif args.panel == '338':
+        snp_bed = "%s/BAF/338gene.snp.bed" % (bin_dir)
     else:
         snp_bed = "NA"
 
     snp_vaf = "%s/tumor.snp.vaf" % (args.outdir)
     cmd = "%s %s/BAF/pileup2vaf.v2.py -bam %s -bed %s -outfile %s" % (py3,bin_dir,args.tbam,snp_bed,snp_vaf)
-    or.write(cmd+'\n')
+    of.write(cmd+'\n')
 
     # plot fig
-    
+    cmd = "%s %s/BAF/plot_vaf_by_chr.r %s %s %s" % (rscript,bin_dir,snp_vaf,args.tname,args.outdir)
+    of.write(cmd+'\n\n')
+
     # extract HLA region read1/read2
     of.write("###extract HLA reads"+'\n')
     extract_HLA_reads(args.nbam,
