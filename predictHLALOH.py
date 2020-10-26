@@ -26,7 +26,7 @@ def main():
 
     gatkDIR = "%s/gatkDir/picard-tools-1.119" % (bin_dir)
     novoDIR = "%s/novoDir/novocraft" % (bin_dir)
-    gatk
+    
     config_file = bin_dir + '/config.ini'
     config = configparser.ConfigParser()
     config.read(config_file)
