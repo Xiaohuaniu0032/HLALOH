@@ -3,7 +3,7 @@
 # License file not found.
 # Licensed for evaluation, educational, and not-for-profit use only.
 #  novoalign -d /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701T.patient.hlaFasta.nix -f /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.1.fastq /home/fulongfei/workdir/git_repo/HLALOH/test/lohhla/20091701N/20091701N.chr6region.2.fastq -F STDFQ -R 0 -r All 9999 -o SAM -o FullNW 
-# Starting at Fri Oct 16 16:35:53 2020
+# Starting at Tue Oct 20 10:38:54 2020
 # Interpreting input files as Sanger FASTQ.
 # Index Build Version: 3.2
 # Hash length: 6
@@ -14,8 +14,8 @@
 #   Unique Alignment:      450 (41.8%)
 #       Multi Mapped:       25 ( 2.3%)
 #   No Mapping Found:      601 (55.9%)
-#       Elapsed Time: 1.348 (secs.)
-#           CPU Time: 1.34 (secs.)
+#       Elapsed Time: 1.357 (secs.)
+#           CPU Time: 1.35 (secs.)
 # Fragment Length Distribution
 #	From	To	Count
 #	45	59	1
@@ -53,4 +53,4 @@
 #	525	539	0
 #	540	554	1
 # Mean   158, Std Dev  63.8
-# Done at Fri Oct 16 16:35:55 2020
+# Done at Tue Oct 20 10:38:56 2020
