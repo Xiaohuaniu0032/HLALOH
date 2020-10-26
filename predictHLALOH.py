@@ -8,15 +8,13 @@ def parse_args():
     AP = argparse.ArgumentParser("detect HLA LOH from capture NGS data using paired tumor/normal")
     AP.add_argument('-nbam',help='normal bam file',dest='nbam')
     AP.add_argument('-tbam',help='tumor bam file',dest='tbam')
-    AP.add_argument('-bamDir',help='dir contains tumor and normal bam files',dest='bamdir')
     AP.add_argument('-bed',help='bed file',dest='bed')
     AP.add_argument('-nname',help='normal sample name',dest='nname')
     AP.add_argument('-tname',help='tumor sample name',dest='tname')
     AP.add_argument('-fa',help='fasta file',dest='fasta',default='/data1/database/b37/human_g1k_v37.fasta')
     AP.add_argument('-ref',help='cnv ref control dir',dest='ref')
-    AP.add_argument('-gatkDir',help='gatk dir',dest='gatkDir')
-    AP.add_argument('-novoDir',help='novoalign bin dir',dest='novoDir')
     AP.add_argument('-p',help='panel, can be <889|338>',dest='panel')
+    AP.add_argument('-snp',help='snp bed',dest='snp_bed')
     AP.add_argument('-od',help='output dir',dest='outdir')
 
     return AP.parse_args()
@@ -26,6 +24,9 @@ def main():
     args = parse_args()
     bin_dir = os.path.split(os.path.realpath(__file__))[0]
 
+    gatkDIR = "%s/gatkDir/picard-tools-1.119" % (bin_dir)
+    novoDIR = "%s/novoDir/novocraft" % (bin_dir)
+    gatk
     config_file = bin_dir + '/config.ini'
     config = configparser.ConfigParser()
     config.read(config_file)
@@ -36,7 +37,7 @@ def main():
     py2 = config['software']['python2']
     samtools = config['software']['samtools']
     java = config['software']['java']
-    gatk_dir = config['software']['gatk_dir']
+    #gatk_dir = config['software']['gatk_dir']
     sambamba = config['software']['sambamba']
     bedtools = config['software']['bedtools']
     rscript = config['software']['rscript']
@@ -68,12 +69,19 @@ def main():
 
     # cal snp vaf for tumor to visually estimate tumor's purity and ploidy
     of.write("###cal tumor snp vaf"+'\n')
-    if args.panel == '889':
-        snp_bed = "%s/BAF/889gene.snp.bed" % (bin_dir)
-    elif args.panel == '338':
-        snp_bed = "%s/BAF/338gene.snp.bed" % (bin_dir)
+
+    if args.panel:
+        # if panel exists
+        if args.panel == '889':
+            snp_bed = "%s/BAF/889gene.snp.bed" % (bin_dir)
+        elif args.panel == '338':
+            snp_bed = "%s/BAF/338gene.snp.bed" % (bin_dir)
+        else:
+            snp_bed = "NA"
     else:
-        snp_bed = "NA"
+        # if panel not exists
+        snp_bed = args.snp_bed
+    
 
     snp_vaf = "%s/tumor.snp.vaf" % (args.outdir)
     tumor_pileup = "%s/tumor.mpileup" % (args.outdir)
@@ -94,7 +102,7 @@ def main():
                         samtools,
                         bedtools,
                         java,
-                        gatk_dir,
+                        gatkDIR,
                         args.outdir,
                         of
                         )
@@ -307,8 +315,8 @@ def main():
                                         hla_alleles,
                                         hla_fa,
                                         pp,
-                                        args.gatkDir,
-                                        args.novoDir,
+                                        gatkDIR,
+                                        novoDIR,
                                         hla_db,"FALSE"
                                         )
     of.write('\n'+"###detect HLA LOH by lohhla software"+'\n')
