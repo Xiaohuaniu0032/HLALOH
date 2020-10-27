@@ -1,1 +1,6 @@
-test/
+test/*.bam
+test/*.sam
+test/*.pileup
+test/*.mpileup
+test/*.vaf
+*/*.pyc
