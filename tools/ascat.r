@@ -36,8 +36,8 @@ if (is.null(purity) | is.null(ploidy)) {
 val <- c(purity_new,ploidy_new)
 names(val) <- c("purity","ploidy")
 
-print(paste("purity is:",purity,sep=""))
-print(paste("ploidy is:",ploidy,sep=""))
+print(paste("purity is:",purity_new,sep=""))
+print(paste("ploidy is:",ploidy_new,sep=""))
 
 write.table(val,file=of,quote=FALSE,row.names=TRUE,col.names=FALSE)
 
