@@ -7,7 +7,7 @@ GetOptions(
     "res:s" => \$predict_file,        # NEED
     "hla:s" => \$hla_allele,          # NEED (hla.result.new)
     "cn:f" => \$cn_cutoff,            # 0.5
-    "p:f" => \$p_value_cutoff,        # 0.01
+    "p:f" => \$p_value_cutoff,        # 0.05
     "o:s" => \$outfile,               # NEED
     ) or die;
 
@@ -16,11 +16,11 @@ if (not defined $cn_cutoff){
     $cn_cutoff = 0.5;
 }
 if (not defined $p_value_cutoff){
-    $p_value_cutoff = 0.01;
+    $p_value_cutoff = 0.05;
 }
 
 open O, ">$outfile" or die;
-print O "hla_allele\tcopyNumber\tLOH\n";
+print O "hla_allele\tcopyNumber\tPVal_unique\tLOH\n";
 
 my @alleles;
 open IN, "$hla_allele" or die;
@@ -48,16 +48,16 @@ for my $allele (@alleles){
     my $abc = (split /\_/, $allele)[1];
     if (exists $hla_predict{$allele}){
         my $cn = sprintf "%.2f", $hla_predict{$allele};
-        my $pval = $hla_predict{$abc};
+        my $pval = sprintf "%.4f", $hla_predict{$abc};
         if ($cn <= $cn_cutoff and $pval <= $p_value_cutoff){
             # a loh
-            print O "$allele\t$cn\tYES\n";
+            print O "$allele\t$cn\t$pval\tYES\n";
         }else{
-            print O "$allele\t$cn\tNO\n";
+            print O "$allele\t$cn\t$pval\tNO\n";
         }
     }else{
         # no exists in result file
-        print O "$allele\tNA\tNO\n";
+        print O "$allele\tNA\tNA\tNO\n";
     }
 }
 
