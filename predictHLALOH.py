@@ -13,7 +13,7 @@ def parse_args():
     AP.add_argument('-tname',help='tumor sample name',dest='tname')
     AP.add_argument('-fa',help='fasta file',dest='fasta',default='/data1/database/b37/human_g1k_v37.fasta')
     AP.add_argument('-ref',help='cnv ref control dir',dest='ref')
-    #AP.add_argument('-p',help='panel, can be <889|338>',dest='panel')
+    AP.add_argument('-p',help='panel, can be <889|338>',dest='panel')
     AP.add_argument('-snp',help='snp bed',dest='snp_bed')
     AP.add_argument('-od',help='output dir',dest='outdir')
 
