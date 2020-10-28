@@ -13,7 +13,7 @@ def parse_args():
     AP.add_argument('-tname',help='tumor sample name',dest='tname')
     AP.add_argument('-fa',help='fasta file',dest='fasta',default='/data1/database/b37/human_g1k_v37.fasta')
     AP.add_argument('-ref',help='cnv ref control dir',dest='ref')
-    AP.add_argument('-p',help='panel, can be <889|338>',dest='panel')
+    #AP.add_argument('-p',help='panel, can be <889|338>',dest='panel')
     AP.add_argument('-snp',help='snp bed',dest='snp_bed')
     AP.add_argument('-od',help='output dir',dest='outdir')
 
@@ -152,14 +152,16 @@ def main():
     normal_pileup = "%s/%s.normal.pileup" % (args.outdir,args.nname)
 
     of.write('\n'+"###cal BAF for normal"+'\n')
-    cmd = "%s mpileup -d 8000 -f %s -l %s %s >%s" % (samtools,args.fasta,args.bed,args.nbam,normal_pileup)
+    #cmd = "%s mpileup -d 8000 -f %s -l %s %s >%s" % (samtools,args.fasta,args.bed,args.nbam,normal_pileup)
+    cmd = "%s mpileup -d 8000 -f %s -l %s %s >%s" % (samtools,args.fasta,snp_bed,args.nbam,normal_pileup)
     of.write(cmd+'\n')
 
     cmd = "%s %s/BAF/pileup2vaf.py %s %s" % (py3,bin_dir,normal_pileup,nvaf)
     of.write(cmd+'\n')
 
     of.write('\n'+"###cal BAF for tumor"+'\n')
-    cmd = "%s mpileup -d 8000 -f %s -l %s %s >%s" % (samtools,args.fasta,args.bed,args.tbam,tumor_pileup)
+    #cmd = "%s mpileup -d 8000 -f %s -l %s %s >%s" % (samtools,args.fasta,args.bed,args.tbam,tumor_pileup)
+    cmd = "%s mpileup -d 8000 -f %s -l %s %s >%s" % (samtools,args.fasta,snp_bed,args.tbam,tumor_pileup)
     of.write(cmd+'\n')
 
     cmd = "%s %s/BAF/pileup2vaf.py %s %s" % (py3,bin_dir,tumor_pileup,tvaf)
@@ -287,10 +289,42 @@ def main():
     cmd = "%s %s/tools/ascatBAF.pl %s %s" % (perl,bin_dir,n_vaf,n_baf_ascat)
     of.write(cmd+'\n')
 
+    ### get EAS SNP pos's BAF and logR info for ascat
+    # for logR
+    t_logR_SNP = "%s/%s.ascat.logR.EAS_SNP.xls" % (args.outdir,args.tname)
+    n_logR_SNP = "%s/%s.ascat.logR.EAS_SNP.xls" % (args.outdir,args.nname)
+
+    cmd = "%s %s/tools/get_EAS_SNP_logR_BAF_for_ASCAT.pl %s %s %s" % (perl,bin_dir,tumor_ascatlogR,snp_bed,t_logR_SNP)
+    of.write(cmd+'\n')
+
+    cmd = "%s %s/tools/get_EAS_SNP_logR_BAF_for_ASCAT.pl %s %s %s" % (perl,bin_dir,normal_ascatlogR,snp_bed,n_logR_SNP)
+    of.write(cmd+'\n')
+
+    # for BAF
+    t_baf_SNP = "%s/%s.ascat.BAF.EAS_SNP.xls" % (args.outdir,args.tname)
+    n_baf_SNP = "%s/%s.ascat.BAF.EAS_SNP.xls" % (args.outdir,args.nname)
+
+    cmd = "%s %s/tools/get_EAS_SNP_logR_BAF_for_ASCAT.pl %s %s %s" % (perl,bin_dir,t_baf_ascat,snp_bed,t_baf_SNP)
+    of.write(cmd+'\n')
+
+    cmd = "%s %s/tools/get_EAS_SNP_logR_BAF_for_ASCAT.pl %s %s %s" % (perl,bin_dir,n_baf_ascat,snp_bed,n_baf_SNP)
+    of.write(cmd+'\n')
+
+
     # ASCAT
     ascatPurityPloidyFile = "%s/PurityPloidyEst.txt" % (args.outdir)
-    cmd = "%s %s/tools/ascat.r %s %s %s %s %s" % (rscript,bin_dir,t_baf_ascat,n_baf_ascat,tumor_ascatlogR,normal_ascatlogR,ascatPurityPloidyFile)
+    #cmd = "%s %s/tools/ascat.r %s %s %s %s %s" % (rscript,bin_dir,t_baf_ascat,n_baf_ascat,tumor_ascatlogR,normal_ascatlogR,ascatPurityPloidyFile)
     
+    cmd = "%s %s/tools/ascat.r %s %s %s %s %s" % (
+                                                    rscript,
+                                                    bin_dir,
+                                                    t_baf_SNP,
+                                                    n_baf_SNP,
+                                                    t_logR_SNP,
+                                                    n_logR_SNP,
+                                                    ascatPurityPloidyFile
+                                                )
+
     of.write('\n'+"###estimate tumor purity & ploidy By ASCAT"+'\n')
     of.write(cmd+'\n')
 
