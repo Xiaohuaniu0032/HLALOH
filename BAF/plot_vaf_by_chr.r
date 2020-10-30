@@ -18,6 +18,7 @@ for (c in chr.int){
 	sub.rt <- rt[rt$chr==c,]
 	sub.rt$line <- 1:nrow(sub.rt)
 	sub.rt$vaf <- sub.rt$alt_freq
-	plot(sub.rt$line,sub.rt$vaf,main=name,xlab=paste("chr",c,sep=""),ylab="vaf",pch=20,cex.lab=2)
+	#plot(sub.rt$line,sub.rt$vaf,main=name,xlab=paste("chr",c,sep=""),ylab="vaf",pch=20,cex.lab=2)
+	plot(sub.rt$pos,sub.rt$vaf,main=name,xlab=paste("chr",c,sep=""),ylab="vaf",pch=20,cex.lab=2)
 }
 dev.off()
