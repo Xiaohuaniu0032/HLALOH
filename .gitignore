@@ -4,3 +4,4 @@ test/*.pileup
 test/*.mpileup
 test/*.vaf
 */*.pyc
+tools/*pdf
