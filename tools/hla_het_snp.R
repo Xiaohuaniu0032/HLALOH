@@ -134,6 +134,7 @@ for (HLA_gene in c('hla_a','hla_b','hla_c')){
 	if(length(HLA_As)<=1){
 		next
 		# skip gene with two same alleles
+		# homo alleles will not get hla_*_aln.txt file (* stands for a/b/c)
 	}
 	
 	HLA_A_type1 <- HLA_As[1]
