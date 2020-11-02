@@ -11,7 +11,8 @@ hla_b_aln <- paste(workDir,'/hla_b_aln.txt',sep="")
 hla_c_aln <- paste(workDir,'/hla_c_aln.txt',sep="")
 
 hlaPath <- paste(workDir,'/hla.result.new',sep="")
-hlaFa <- paste(workDir,'/patient.hla.fa',sep="")
+#hlaFa <- paste(workDir,'/patient.hla.fa',sep="")
+hlaFa <- paste(workDir,'/patient.hlaFasta.fa',sep="")
 
 hlaAlleles <- read.table(hlaPath, sep = '\t', header = FALSE, as.is = TRUE)
 hlaAlleles <- unique(sort(hlaAlleles$V1))
