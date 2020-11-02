@@ -13,8 +13,8 @@ def parse_args():
     AP.add_argument('-fa',help='fasta file',dest='fasta',default='/data1/database/b37/human_g1k_v37.fasta')
     #AP.add_argument('-p',help='panel, can be <889|338>',dest='panel')
     AP.add_argument('-snpBED',help='snp bed file',dest='snpBED',default='/data1/workdir/fulongfei/git_repo/HLALOH/BAF/889gene.snp.bed')
-    AP.add_argument('-py2',help='python2 path',dest='py2',dest='/home/fulongfei/miniconda3/envs/py27/bin/python2')
-    AP.add_argument('-py3',help='python3 path',dest='py3',dest='/home/fulongfei/miniconda3/bin/python3')
+    AP.add_argument('-py2',help='python2 path',dest='py2',default='/home/fulongfei/miniconda3/envs/py27/bin/python2')
+    AP.add_argument('-py3',help='python3 path',dest='py3',default='/home/fulongfei/miniconda3/bin/python3')
     AP.add_argument('-od',help='output dir',dest='outdir')
 
     return AP.parse_args()
