@@ -110,7 +110,7 @@ def main():
 
     # extract HLA reads from tumor
     of.write('\n'+"###extract HLA reads from tumor BAM file"+'\n')
-    extract_HLA_reads(args.tbam,args.tname,args.outdir,of,chrNaming)
+    extract_HLA_reads(args.tbam,args.tname,args.outdir,of,chrname)
 
     fq1_tumor = "%s/%s.chr6region.1.fastq" % (args.outdir,args.tname)
     fq2_tumor = "%s/%s.chr6region.2.fastq" % (args.outdir,args.tname)
@@ -122,6 +122,8 @@ def main():
     novoindexBinary = "%s/novoDir/novocraft/novoindex" % (bin_dir)
     novoalignBinary = "%s/novoDir/novocraft/novoalign" % (bin_dir)
     cmd = "%s %s %s" % (novoindexBinary,novoIndexFile,hla_fa)
+    of.write(cmd+'\n')
+
     cmd = "%s -d %s -f %s %s -F STDFQ -R 0 -r All 9999 -o SAM -o FullNW >%s" % (
                                                                                 novoalignBinary,
                                                                                 novoIndexFile,
