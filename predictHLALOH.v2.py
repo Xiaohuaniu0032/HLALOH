@@ -11,10 +11,14 @@ def parse_args():
     AP.add_argument('-tname',help='tumor sample name',dest='tname')
     AP.add_argument('-nname',help='tumor sample name',dest='nname')
     AP.add_argument('-fa',help='fasta file',dest='fasta',default='/data1/database/b37/human_g1k_v37.fasta')
-    #AP.add_argument('-p',help='panel, can be <889|338>',dest='panel')
+    AP.add_argument('-ref',help='cnv ref control dir',dest='ref',default='/data1/workdir/fulongfei/git_repo/HLALOH/DB/cnv_ref/889/DB')
+    AP.add_argument('-bed',help='bed file',dest='bed',default='/home/wangce/workdir/database/humandb/panel/889genes_20191225.bed')
     AP.add_argument('-snpBED',help='snp bed file',dest='snpBED',default='/data1/workdir/fulongfei/git_repo/HLALOH/BAF/889gene.snp.bed')
     AP.add_argument('-py2',help='python2 path',dest='py2',default='/home/fulongfei/miniconda3/envs/py27/bin/python2')
     AP.add_argument('-py3',help='python3 path',dest='py3',default='/home/fulongfei/miniconda3/bin/python3')
+    AP.add_argument('-sbb',help='sambamba path',dest='sbb',default='/home/fulongfei/miniconda3/bin/sambamba')
+    AP.add_argument('-rscript',help='R path',dest='rscript',default='/home/fulongfei/miniconda3/bin/Rscript')
+    AP.add_argument('-bedtools',help='bedtools path',dest='bedtools',default='/home/fulongfei/miniconda3/bin/bedtools')
     AP.add_argument('-od',help='output dir',dest='outdir')
 
     return AP.parse_args()
@@ -33,6 +37,8 @@ def main():
         5. align HLA reads using hla ref fasta
         6. make pileup for each allele and cal BAF
         7. plot HLA BAF fig
+
+        8. add CNV to aid BAF2LOH estimation
     '''
 
     args = parse_args()
@@ -168,6 +174,73 @@ def main():
     of.write('\n'+'###baf2loh main script'+'\n')
     cmd = "%s %s/BAF2LOH.py -indir %s -tname %s" % (args.py3,bin_dir,args.outdir,args.tname)
     of.write(cmd+'\n')
+
+
+    # add CNV part
+    bams = [args.nbam,args.tbam]
+    names = [args.nname,args.tname]
+    stype = ['normal','tumor']
+
+    idx = 0
+    for i in bams:
+        name = names[idx]
+        st = stype[idx]
+        of.write('\n' + "### call CNV for %s" % (st) + '\n')
+        # s1. calculate depth
+        cmd = "perl %s/CNVscan/bin/cal_depth.pl -bam %s -n %s -bed %s -sbb %s -outdir %s" % (
+                                                                                            bin_dir,
+                                                                                            i,
+                                                                                            name,
+                                                                                            args.bed,
+                                                                                            args.sbb,
+                                                                                            args.outdir
+                                                                                            )
+        of.write(cmd+'\n')
+
+        # s2. add gc
+        depth_file = "%s/%s.targetcoverage.cnn" % (args.outdir,name)
+        cmd = "perl %s/CNVscan/bin/add_gc.pl -bed %s -depth %s -bedtools_bin %s -fa %s -outdir %s" % (
+                                                                                                    bin_dir,
+                                                                                                    args.bed,
+                                                                                                    depth_file,
+                                                                                                    args.bedtools,
+                                                                                                    args.fasta,
+                                                                                                    args.outdir
+                                                                                                    )
+        of.write(cmd+'\n')
+
+        # s3. infer sex
+        cmd = "%s %s/CNVscan/bin/infer_sex.py -cov %s -o %s/sex.txt" % (args.py3,bin_dir,depth_file,args.outdir)
+        of.write(cmd+'\n')
+
+        # s4. gc correct
+        add_gc_depth = "%s/%s.targetcoverage.cnn.with.gc.xls" % (args.outdir,name)
+        sex_file = "%s/sex.txt" % (args.outdir)
+        gc_correct_depth = "%s/%s.targetcoverage.cnn.with.gc.xls.gc.corrected.xls" % (args.outdir,name)
+        cmd = "%s %s/CNVscan/bin/gc_correct.r %s %s %s" % (args.rscript,bin_dir,add_gc_depth,sex_file,gc_correct_depth)
+        of.write(cmd+'\n')
+
+        # s5. normalize
+        cmd = "perl %s/CNVscan/bin/normalize.pl -d %s -od %s" % (bin_dir,gc_correct_depth,args.outdir)
+        of.write(cmd+'\n')
+
+        # s6. make ref matrix
+        ref_mat = "%s/ref.matrix.txt" % (args.outdir)
+        cmd = "perl %s/CNVscan/bin/make_ref_matrix.pl %s %s" % (bin_dir,args.ref,ref_mat)
+        of.write(cmd+'\n')
+
+        # s7. cal logR
+        norm_file = "%s/%s.norm.xls" % (args.outdir,name)
+        logR = "%s/%s.logR.xls" % (args.outdir,name)
+        cmd = "perl %s/CNVscan/bin/cal_logR.pl %s %s %s" % (bin_dir,norm_file,ref_mat,logR)
+        of.write(cmd+'\n')
+
+        # s8. cal CN
+        cnFile = "%s/%s.CopyNumber.xls" % (args.outdir,name)
+        cmd = "perl %s/CNVscan/bin/Gene_Level_CNV.pl -in %s -o %s" % (bin_dir,logR,cnFile)
+        of.write(cmd+'\n')
+
+        idx += 1
 
     of.close()
 
