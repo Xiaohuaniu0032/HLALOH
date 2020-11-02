@@ -11,7 +11,8 @@ def parse_args():
     AP.add_argument('-tname',help='tumor sample name',dest='tname')
     AP.add_argument('-nname',help='tumor sample name',dest='nname')
     AP.add_argument('-fa',help='fasta file',dest='fasta',default='/data1/database/b37/human_g1k_v37.fasta')
-    AP.add_argument('-p',help='panel, can be <889|338>',dest='panel')
+    #AP.add_argument('-p',help='panel, can be <889|338>',dest='panel')
+    AP.add_argument('-snpBED',help='snp bed file',dest='snpBED',default='/data1/workdir/fulongfei/git_repo/HLALOH/BAF/889gene.snp.bed')
     AP.add_argument('-od',help='output dir',dest='outdir')
 
     return AP.parse_args()
@@ -40,6 +41,8 @@ def main():
 
     # cal snp vaf for tumor to visually estimate tumor's purity and ploidy
     of.write("###cal tumor snp vaf"+'\n')
+    
+    '''
     if args.panel:
         # if panel exists
         if args.panel == '889':
@@ -51,7 +54,9 @@ def main():
     else:
         # if panel not exists
         snp_bed = args.snp_bed
+    '''
 
+    snp_bed = args.snpBED
     snp_vaf = "%s/tumor.snp.vaf" % (args.outdir)
     tumor_pileup = "%s/tumor.mpileup" % (args.outdir)
     cmd = "samtools mpileup -d 8000 -f %s -l %s %s >%s" % (args.fasta,snp_bed,args.tbam,tumor_pileup)
