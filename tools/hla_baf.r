@@ -20,21 +20,24 @@ for (i in 1:nrow(a)){
 	points(val$pos1,val$baf1,pch=20)
 	points(val$pos1,val$baf2,pch=20)
 }
+abline(h=0.5,col="blue")
 
 # plot hla b
 plot(NULL,xlim=c(0,max(b$pos1)),ylim=c(0,1),xlab="Pos Index",ylab="BAF",xaxt="n",xaxs="i",main="HLA_B BAF")
 for (i in 1:nrow(b)){
-	val <- a[i,]
+	val <- b[i,]
 	points(val$pos1,val$baf1,pch=20)
 	points(val$pos1,val$baf2,pch=20)
 }
+abline(h=0.5,col="blue")
 
 # plot hla c
 plot(NULL,xlim=c(0,max(c$pos1)),ylim=c(0,1),xlab="Pos Index",ylab="BAF",xaxt="n",xaxs="i",main="HLA_C BAF")
 for (i in 1:nrow(c)){
-	val <- a[i,]
+	val <- c[i,]
 	points(val$pos1,val$baf1,pch=20)
 	points(val$pos1,val$baf2,pch=20)
 }
+abline(h=0.5,col="blue")
 
 dev.off()
