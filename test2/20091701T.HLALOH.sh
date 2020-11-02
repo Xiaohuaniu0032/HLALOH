@@ -22,14 +22,15 @@ cp /home/fulongfei/workdir/git_repo/HLALOH/test2/*/*_result.tsv /home/fulongfei/
 
 ###extract HLA reads from tumor BAM file
 samtools view -H /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam >/home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.hla.sam
-samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam chr6:29909037-29913661 >>/home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.hla.sam
-samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam chr6:31321649-31324964 >>/home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.hla.sam
-samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam chr6:31236526-31239869 >>/home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.hla.sam
+samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam 6:29909037-29913661 >>/home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.hla.sam
+samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam 6:31321649-31324964 >>/home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.hla.sam
+samtools view /home/fulongfei/workdir/hla_loh/program_test/downsample_bam/20091701T.sort.bam 6:31236526-31239869 >>/home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.hla.sam
 samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.hla.bam /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.hla.sam
 samtools sort -n /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.hla.bam -o /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.sort_by_name.bam
 bedtools bamtofastq -i /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.sort_by_name.bam -fq /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.chr6region.1.fastq -fq2 /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.chr6region.2.fastq
 
 ###aln fq to hla ref fasta using novoalign
+/data1/workdir/fulongfei/git_repo/HLALOH/novoDir/novocraft/novoindex /home/fulongfei/workdir/git_repo/HLALOH/test2/patient.hlaFasta.nix /home/fulongfei/workdir/git_repo/HLALOH/test2/patient.hlaFasta.fa
 /data1/workdir/fulongfei/git_repo/HLALOH/novoDir/novocraft/novoalign -d /home/fulongfei/workdir/git_repo/HLALOH/test2/patient.hlaFasta.nix -f /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.chr6region.1.fastq /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.chr6region.2.fastq -F STDFQ -R 0 -r All 9999 -o SAM -o FullNW >/home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.chr6region.patient.reference.hlas.sam
 samtools view -b -o /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.chr6region.patient.reference.hlas.bam /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.chr6region.patient.reference.hlas.sam
 samtools sort -@ 8 -o /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.chr6region.patient.reference.hlas.csort.bam /home/fulongfei/workdir/git_repo/HLALOH/test2/20091701T.chr6region.patient.reference.hlas.bam
