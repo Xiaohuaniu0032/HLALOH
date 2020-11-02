@@ -13,13 +13,15 @@ def parse_args():
     AP.add_argument('-fa',help='fasta file',dest='fasta',default='/data1/database/b37/human_g1k_v37.fasta')
     #AP.add_argument('-p',help='panel, can be <889|338>',dest='panel')
     AP.add_argument('-snpBED',help='snp bed file',dest='snpBED',default='/data1/workdir/fulongfei/git_repo/HLALOH/BAF/889gene.snp.bed')
+    AP.add_argument('-py2',help='python2 path',dest='py2',dest='/home/fulongfei/miniconda3/envs/py27/bin/python2')
+    AP.add_argument('-py3',help='python3 path',dest='py3',dest='/home/fulongfei/miniconda3/bin/python3')
     AP.add_argument('-od',help='output dir',dest='outdir')
 
     return AP.parse_args()
 
 
-py3 = '/home/fulongfei/miniconda3/bin/python3'
-py2 = '/home/fulongfei/miniconda3/envs/py27/bin/python2'
+#py3 = '/home/fulongfei/miniconda3/bin/python3'
+#py2 = '/home/fulongfei/miniconda3/envs/py27/bin/python2'
 
 def main():
     '''
@@ -61,7 +63,7 @@ def main():
     tumor_pileup = "%s/tumor.mpileup" % (args.outdir)
     cmd = "samtools mpileup -d 8000 -f %s -l %s %s >%s" % (args.fasta,snp_bed,args.tbam,tumor_pileup)
     of.write(cmd+'\n')
-    cmd = "%s %s/BAF/pileup2vaf.py %s %s" % (py3,bin_dir,tumor_pileup,snp_vaf)
+    cmd = "%s %s/BAF/pileup2vaf.py %s %s" % (args.py3,bin_dir,tumor_pileup,snp_vaf)
     of.write(cmd+'\n')
 
     # plot fig
@@ -81,7 +83,7 @@ def main():
     fq1 = "%s/%s.chr6region.1.fastq" % (args.outdir,args.nname)
     fq2 = "%s/%s.chr6region.2.fastq" % (args.outdir,args.nname)
 
-    cmd = "%s %s/OptiType-1.3.2/OptiTypePipeline.py -i %s %s --dna -v -o %s -c %s/OptiType-1.3.2/config.ini.example" % (py2,
+    cmd = "%s %s/OptiType-1.3.2/OptiTypePipeline.py -i %s %s --dna -v -o %s -c %s/OptiType-1.3.2/config.ini.example" % (args.py2,
         bin_dir,
         fq1,
         fq2,
@@ -100,14 +102,14 @@ def main():
     #print(hla_res)
     raw_hla_res = "%s/hla.result.raw" % (args.outdir)
     new_hla_res = "%s/hla.result.new" % (args.outdir)
-    cmd = "%s %s/tools/translate_HLA_format.py -i %s -o %s" % (py3,bin_dir,raw_hla_res,new_hla_res)
+    cmd = "%s %s/tools/translate_HLA_format.py -i %s -o %s" % (args.py3,bin_dir,raw_hla_res,new_hla_res)
 
     of.write(cmd+'\n')
 
 
     # get HLA alleles' fasta sequence
     hla_fa = "%s/patient.hlaFasta.fa" % (args.outdir)
-    cmd = "%s %s/tools/get_hla_fasta.py -i %s -o %s" % (py3,bin_dir,raw_hla_res,hla_fa)
+    cmd = "%s %s/tools/get_hla_fasta.py -i %s -o %s" % (args.py3,bin_dir,raw_hla_res,hla_fa)
 
     of.write('\n'+"###get hla fasta"+'\n')
     of.write(cmd+'\n')
@@ -164,7 +166,7 @@ def main():
     of.write(cmd+'\n')
 
     of.write('\n'+'###baf2loh main script'+'\n')
-    cmd = "%s %s/BAF2LOH.py -indir %s -tname %s" % (py3,bin_dir,args.outdir,args.tname)
+    cmd = "%s %s/BAF2LOH.py -indir %s -tname %s" % (args.py3,bin_dir,args.outdir,args.tname)
     of.write(cmd+'\n')
 
     of.close()
