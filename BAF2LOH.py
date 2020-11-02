@@ -7,21 +7,23 @@ import glob
 def parse_args():
     AP = argparse.ArgumentParser("Convert BAF into LOH")
     AP.add_argument('-indir',help='result dir',dest='indir')
-    AP.add_argument('tname',help='tumor name',dest='tname')
+    AP.add_argument('-tname',help='tumor name',dest='tname')
     
     return AP.parse_args()
 
 def main():
+    args = parse_args()
     hla_typing_file = "%s/hla.result.new" % (args.indir)
     bin_dir = os.path.split(os.path.realpath(__file__))[0]
     #runsh = "%s/%s.BAF2LOH.sh" % (args.indir,args.tname)
     #of = open(runsh,'w')
 
     # get each allele's bam file
+    new_hla_res = "%s/hla.result.new" % (args.indir)
     hla_alleles = []
     hla_allele = open(new_hla_res,'r')
     for line in hla_allele:
-        hla_alleles.append(strip(line))
+        hla_alleles.append(line.strip())
     hla_allele.close()
 
     proper_align_bam = "%s/%s.chr6region.patient.reference.hlas.csorted.noduplicates.filtered.bam" % (args.indir,args.tname)
@@ -46,6 +48,7 @@ def main():
         
         # pileup file
         pileupFile = "%s/%s.%s.pileup" % (args.indir,args.tname,a)
+        hla_fa = "%s/patient.hlaFasta.fa" % (args.indir)
         cmd = "samtools mpileup -f %s %s >%s" % (hla_fa,sort_bam,pileupFile)
         os.system(cmd)
         #of.write(cmd+'\n')
@@ -95,7 +98,7 @@ def main():
     #of.write(cmd+'\n')
 
     # plot baf fig
-    cmd = "Rscript %s/tools/hla_baf.r %s %s %s %s %s" % (bin_dir,hla_a_baf,hla_b_baf,hla_c_baf,args.tname,args.outdir)
+    cmd = "Rscript %s/tools/hla_baf.r %s %s %s %s %s" % (bin_dir,hla_a_baf,hla_b_baf,hla_c_baf,args.tname,args.indir)
     os.system(cmd)
     #of.write(cmd+'\n')
 
