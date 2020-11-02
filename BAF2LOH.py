@@ -58,6 +58,10 @@ def main():
     os.system(cmd)
     #of.write(cmd+'\n')
 
+
+
+    # for homo alleles, you will not get hla_*_aln.txt file(s)
+
     # cal BAF
     hla_a1 = hla_alleles[0]
     hla_a2 = hla_alleles[1]
@@ -85,17 +89,31 @@ def main():
     hla_b_baf = "%s/hla_b_BAF.txt" % (args.indir)
     hla_c_baf = "%s/hla_c_BAF.txt" % (args.indir)
 
-    cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_a_het_file,hla_a1_pileup,hla_a2_pileup,hla_a_baf)
-    os.system(cmd)
+    if os.path.exists(hla_a_het_file):
+        cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_a_het_file,hla_a1_pileup,hla_a2_pileup,hla_a_baf)
+        os.system(cmd)
+
+    #cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_a_het_file,hla_a1_pileup,hla_a2_pileup,hla_a_baf)
+    #os.system(cmd)
     #of.write(cmd+'\n')
 
-    cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_b_het_file,hla_b1_pileup,hla_b2_pileup,hla_b_baf)
-    os.system(cmd)
+    if os.path.exists(hla_b_het_file):
+        cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_b_het_file,hla_b1_pileup,hla_b2_pileup,hla_b_baf)
+        os.system(cmd)
+
+
+    #cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_b_het_file,hla_b1_pileup,hla_b2_pileup,hla_b_baf)
+    #os.system(cmd)
     #of.write(cmd+'\n')
 
-    cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_c_het_file,hla_c1_pileup,hla_c2_pileup,hla_c_baf)
-    os.system(cmd)
+    if os.path.exists(hla_c_het_file):
+        cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_c_het_file,hla_c1_pileup,hla_c2_pileup,hla_c_baf)
+        os.system(cmd)
+
+    #cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_c_het_file,hla_c1_pileup,hla_c2_pileup,hla_c_baf)
+    #os.system(cmd)
     #of.write(cmd+'\n')
+
 
     # plot baf fig
     cmd = "Rscript %s/tools/hla_baf.r %s %s %s %s %s" % (bin_dir,hla_a_baf,hla_b_baf,hla_c_baf,args.tname,args.indir)
