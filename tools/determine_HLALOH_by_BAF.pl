@@ -111,13 +111,27 @@ sub stat_loh_pos{
     close IN;
 
     if ($gene eq "A"){
-        $hla_cn = $gene_cn{"HLA-A"};
+        if (exists $gene_cn{"HLA-A"}){
+            $hla_cn = $gene_cn{"HLA-A"};
+        }else{
+            $hla_cn = "NA";
+        }
     }
+
     if ($gene eq "B"){
-        $hla_cn = $gene_cn{"HLA-B"};
+        if (exists $gene_cn{"HLA-B"}){
+            $hla_cn = $gene_cn{"HLA-B"};
+        }else{
+            $hla_cn = "NA";
+        }
     }
+
     if ($gene eq "C"){
-        $hla_cn = $gene_cn{"HLA-C"};
+        if (exists $gene_cn{"HLA-C"}){
+            $hla_cn = $gene_cn{"HLA-C"};
+        }else{
+            $hla_cn = "NA";
+        }
     }
 
     #print "$hla_cn\n";
@@ -138,7 +152,12 @@ sub cal_median{
         my $v2 = $val[scalar(@val)/2];
         $median = sprintf "%.2f", ($v1+$v2)/2;
     }else{
-        $median = sprintf "%.2f", $val[ceil(scalar(@val)/2)];
+        # if only one value
+        if (@val == 1){
+            $median = $val[0];
+        }else{
+            $median = sprintf "%.2f", $val[ceil(scalar(@val)/2)];
+        }
     }
 
     return($median);
