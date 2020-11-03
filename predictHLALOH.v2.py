@@ -257,6 +257,8 @@ def chrNaming(ref):
     '''
     infile = open(ref,'r')
     firstLine = infile.readline()
+    infile.close()
+    
     if '>chr' in firstLine:
         chrNaming = 'with_prefix'
     else:
