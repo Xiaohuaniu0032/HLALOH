@@ -242,6 +242,10 @@ def main():
 
         idx += 1
 
+
+    # final result file
+    cmd = "perl %s/tools/determine_HLALOH_by_BAF.pl %s %s" % (bin_dir,args.outdir,args.tname)
+    of.write(cmd+'\n')
     of.close()
 
 
