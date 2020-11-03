@@ -89,10 +89,17 @@ def main():
     hla_b_baf = "%s/hla_b_BAF.txt" % (args.indir)
     hla_c_baf = "%s/hla_c_BAF.txt" % (args.indir)
 
+    # for empty file's header
+    h = 'Rank' + '\t' + 'pos1' + '\t' + 'pos2' + '\t' + 'base1' + '\t' + 'base2' + '\t' + 'num1' + '\t' + 'num2' + '\t' + 'depth' + '\t' + 'baf1' + '\t' + 'baf2'
+
     if os.path.exists(hla_a_het_file):
         cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_a_het_file,hla_a1_pileup,hla_a2_pileup,hla_a_baf)
         os.system(cmd)
-
+    else:
+        # make an empty file
+        of = open(hla_a_baf,'w')
+        of.write(h+'\n')
+        of.close()
     #cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_a_het_file,hla_a1_pileup,hla_a2_pileup,hla_a_baf)
     #os.system(cmd)
     #of.write(cmd+'\n')
@@ -100,7 +107,10 @@ def main():
     if os.path.exists(hla_b_het_file):
         cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_b_het_file,hla_b1_pileup,hla_b2_pileup,hla_b_baf)
         os.system(cmd)
-
+    else:
+        of = open(hla_b_baf,'w')
+        of.write(h+'\n')
+        of.close()
 
     #cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_b_het_file,hla_b1_pileup,hla_b2_pileup,hla_b_baf)
     #os.system(cmd)
@@ -109,7 +119,10 @@ def main():
     if os.path.exists(hla_c_het_file):
         cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_c_het_file,hla_c1_pileup,hla_c2_pileup,hla_c_baf)
         os.system(cmd)
-
+    else:
+        of = open(hla_c_baf,'w')
+        of.write(h+'\n')
+        of.close()
     #cmd = "perl %s/tools/cal_het_pos_baf_using_align_info.pl -het %s -a1 %s -a2 %s -of %s" % (bin_dir,hla_c_het_file,hla_c1_pileup,hla_c2_pileup,hla_c_baf)
     #os.system(cmd)
     #of.write(cmd+'\n')
