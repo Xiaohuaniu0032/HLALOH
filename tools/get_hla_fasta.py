@@ -7,7 +7,6 @@ from collections import defaultdict
 def parse_args():
     AP = argparse.ArgumentParser("get hla A/B/C allels' fasta sequence")
     AP.add_argument('-i',help='OptiType result file',dest='hla_res')
-    #AP.add_argument('-fa',help='HLA all alleles fasta database',dest='fasta')
     AP.add_argument('-o',help='outfile',dest='outfile')
 
     return AP.parse_args()
@@ -17,34 +16,27 @@ def main():
 
     hla2fa = {}
     allele = {}
+
     this_dir = os.path.split(os.path.realpath(__file__))[0]
     upper_dir = os.path.dirname(this_dir)
-    hla_fa = "%s/OptiType-1.3.2/data/hla_reference_dna.fasta" % (upper_dir)
+    #hla_fa = "%s/OptiType-1.3.2/data/hla_reference_dna.fasta" % (upper_dir)
+    hla_fa = "%s/DB/hla_fa_hg19/hla_abc_gen.fasta" % (upper_dir)
+    print("IMGT-HLA database is: %s" % (hla_fa))
+
     hla = open(hla_fa,'r')
     for line in hla:
-        #hla = line.strip().split(' ')[1].split('-')[1]
-        #abc = hla.split('*')[0]
-        #first = hla.split('*')[1].split(':')[0]
-        #second = hla.split('*')[1].split(':')[1]
-
-
-        if re.findall("^>HLA",line):
+        if '>HLA' in line:
             hla_allele = line.strip().split(' ')[1]
-            if hla_allele not in allele:
-                hla2fa[hla_allele] = []
-                allele[hla_allele] = 1
+            hla2fa[hla_allele] = [] # store each line
         else:
             hla2fa[hla_allele].append(line.strip())
-
-    #print(hla2fa)
     hla.close()
-
 
 
     # cat into one seq
     hla2fa_new = {}
     for x in hla2fa:
-        seqs = hla2fa[x]
+        seqs = hla2fa[x] # a list
         new_seq = ""
         for s in seqs:
             new_seq  = new_seq + s
@@ -54,15 +46,14 @@ def main():
     #print(hla2fa_new)
 
 
-    
     # get each A/B/C alleles' fasta
     infile = open(args.hla_res,'r')
     infile.readline() # skip header
     val = infile.readline().split('\t')
     infile.close()
 
-    hla_a1 = val[1]
-    hla_a2 = val[2]
+    hla_a1 = val[1] # A*29:01
+    hla_a2 = val[2] # A*30:01
 
     hla_b1 = val[3]
     hla_b2 = val[4]
@@ -73,39 +64,46 @@ def main():
 
     outfile = open(args.outfile,'w')
 
-    #abc_allele_flag = {}
-
     final_allele = defaultdict(list)
 
     for x in hla2fa_new:
+        # 循环每个hla allele
         seq = hla2fa_new[x]
         if hla_a1 in x:
-            final_allele[hla_a1].append(seq)
+            final_allele[hla_a1].append(seq) # hla_a1是4位,x可能为4-8位
+        else:
+            print("can not find ref hla for %s in IMGT-HLA database" % (hla_a1))
 
         if hla_a2 in x:
             final_allele[hla_a2].append(seq)
+        else:
+            print("can not find ref hla for %s in IMGT-HLA database" % (hla_a2))
 
         if hla_b1 in x:
             final_allele[hla_b1].append(seq)
+        else:
+            print("can not find ref hla for %s in IMGT-HLA database" % (hla_b1))
 
         if hla_b2 in x:
             final_allele[hla_b2].append(seq)
+        else:
+            print("can not find ref hla for %s in IMGT-HLA database" % (hla_b2))
 
         if hla_c1 in x:
             final_allele[hla_c1].append(seq)
+        else:
+            print("can not find ref hla for %s in IMGT-HLA database" % (hla_c1))
 
         if hla_c2 in x:
             final_allele[hla_c2].append(seq)
-
-    # check final_allele
-
-
+        else:
+            print("can not find ref hla for %s in IMGT-HLA database" % (hla_c2))
 
     # write file
-    hla_a1_12 = val[1].split('*')[1].split(':')[0]
-    hla_a1_34 = val[1].split('*')[1].split(':')[1]
+    hla_a1_12 = val[1].split('*')[1].split(':')[0] # 1-2位
+    hla_a1_34 = val[1].split('*')[1].split(':')[1] # 3-4位
     a = ">hla_a_%s_%s" % (hla_a1_12,hla_a1_34)
-    seq = final_allele[hla_a1][0]
+    seq = final_allele[hla_a1][0] # 取第一个allele（可能为4-8位）作为该4位allele的ref
     outfile.write(a+'\n')
     outfile.write(seq+'\n')
 

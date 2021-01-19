@@ -4,6 +4,10 @@ detect HLA LOH from NGS data
 ## Usage
 `python3 predictHLALOH.py -nbam <normal.bam> -tbam <tumor.bam> -bed <bed file> -nname <normal name> -tname <tumor name> -fa <hg19 fasta> -ref <cnv control dir> [-p <889|338> | -snp <snp bed file>] -od <outdir>`
 
+## Versions
+v1: use ascat to estimate tumor purity and ploidy
+v2: not use ascat, just use BAF info to directly estimate LOH
+v3: not use novoalign, use BWA insteat. besides, use new IMGT HLA ref (whole gene nt seq), not use OptiType-1.3.2 hla\_reference\_dna.fasta file (this is the CDS nt seq)
 
 ```
 $ python predictHLALOH.py -h

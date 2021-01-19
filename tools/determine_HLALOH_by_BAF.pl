@@ -3,13 +3,13 @@ use warnings;
 #use Getopt::Long;
 use POSIX qw(ceil);
 
-my ($resdir,$tname) = @ARGV;
+my ($hla_a_baf,$hla_b_baf,$hla_c_baf,$resdir,$name) = @ARGV;
 
-my $hla_a_baf = "$resdir/hla_a_BAF.txt"; # maybe empty
-my $hla_b_baf = "$resdir/hla_b_BAF.txt";
-my $hla_c_baf = "$resdir/hla_c_BAF.txt";
+#my $hla_a_baf = "$resdir/hla_a_BAF.txt"; # maybe empty
+#my $hla_b_baf = "$resdir/hla_b_BAF.txt";
+#my $hla_c_baf = "$resdir/hla_c_BAF.txt";
 
-my $of = "$resdir/$tname\.hlaloh.result.xls";
+my $of = "$resdir/$name\.hlaloh.result.xls";
 
 
 # default cutoff
@@ -23,7 +23,7 @@ open O, ">$of" or die;
 print O "sample\tA_het_pos_num\tA_loh_pos_num\tA_loh_pos_pct\tmedian_A_BAF\tHLA_A_CopyNumber\tif_A_loh\tB_het_pos_num\tB_loh_pos_num\tB_loh_pos_pct\tmedian_B_BAF\tHLA_B_CopyNumber\tif_B_loh\tC_het_pos_num\tC_loh_pos_num\tC_loh_pos_pct\tmedian_C_BAF\tHLA_C_CopyNumber\tif_C_loh\n";
 
 
-my $cnFile = "$resdir/$tname\.CopyNumber.xls";
+my $cnFile = "$resdir/$name\.CopyNumber.xls";
 if (!-e $cnFile){
     die "can not find $cnFile\n";
 }
@@ -42,7 +42,7 @@ my $b_loh = &if_loh($hla_b_info);
 my $c_loh = &if_loh($hla_c_info);
 
 
-print O "$tname\t$a[0]\t$a[1]\t$a[2]\t$a[3]\t$a[4]\t$a_loh\t$b[0]\t$b[1]\t$b[2]\t$b[3]\t$b[4]\t$b_loh\t$c[0]\t$c[1]\t$c[2]\t$c[3]\t$c[4]\t$c_loh\n";
+print O "$name\t$a[0]\t$a[1]\t$a[2]\t$a[3]\t$a[4]\t$a_loh\t$b[0]\t$b[1]\t$b[2]\t$b[3]\t$b[4]\t$b_loh\t$c[0]\t$c[1]\t$c[2]\t$c[3]\t$c[4]\t$c_loh\n";
 
 close O;
 
@@ -52,7 +52,7 @@ sub if_loh{
     my @val = split /\t/, $loh_info; # my $val = "$het_pos_n\t$loh_pos_n\t$loh_pct\t$median_baf\t$hla_cn";
     #print($val[2]);
     #print "$loh_info\n";
-    if ($val[2] > $loh_pct_cutoff){
+    if ($val[2] > $loh_pct_cutoff){ # 0.4~0.6之外的点的百分比，默认60%
         $loh = "YES";
     }else{
         $loh = "NO";
@@ -63,6 +63,7 @@ sub if_loh{
 
 
 sub stat_loh_pos{
+    # 统计a/b/c每个allele的信息（杂合位点个数，loh位点个数，BAF中位值，是否为LOH）
     my ($baf_file,$cn_file,$gene) = @_;
 
     my ($het_pos_n,$loh_pos_n,$loh_pct,$median_baf,$hla_cn) = (0,0,0,0,0);
