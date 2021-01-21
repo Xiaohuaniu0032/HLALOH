@@ -110,12 +110,48 @@ require(zoo, quietly = TRUE)
 require(Rsamtools, quietly = TRUE)
 
 
+
+###########
+# inputs #
+###########
+
+interactive           <- FALSE
+if(interactive)
+{
+  # if you wish to run script interactively, then alter parameters below
+  opt<-parse_args(opt_parser,c('--patientId', 'G_K107'
+                               , '--outputDir', '/camp/lab/swantonc/working/mcgrann/projects/LOHproject/kidney_run/G_K107_full/'
+                               , '--normalBAMfile', '/camp/project/tracerX/working/CRENAL/OUTPUT/G_K107/Rabbit_Hole_Exome/MERGED/DE_DUPED/N1d1ex1.bam'
+                               , '--BAMDir', '/camp/project/tracerX/working/CRENAL/OUTPUT/G_K107/Rabbit_Hole_Exome/MERGED/DE_DUPED/'
+                               , '--hlaPath', '/camp/project/tracerX/working/CRENAL/OUTPUT/G_K107/Rabbit_Hole_Exome/MERGED/POLYSOLVER/HLA_Type/winners.hla.txt'
+                               , '--HLAfastaLoc', '/farm/home/lr-tct-lif/wilson52/installs/polysolver/data/abc_complete.fasta'
+                               , '--CopyNumLoc', '/camp/lab/swantonc/working/mcgrann/projects/LOHproject/kidney_run/G_K107/copyNumSolutions.txt'
+                               , '--mappingStep', 'TRUE'
+                               , '--cleanUp', 'TRUE'
+                               , '--overrideDir', '/camp/lab/swantonc/working/mcgrann/projects/LOHproject/kidney_run/G_K107/flagstat/'
+                               , '--gatkDir', '/camp/apps/eb/software/TracerX-Picard-GATK/0.1-Java-1.7.0_80/bin/'
+                               , '--novoDir', '/camp/apps/eb/software/novoalign/3.07.00/bin/'))
+
+  opt<-parse_args(opt_parser,c('--patientId', 'G_K107'
+                               , '--outputDir', '/camp/lab/swantonc/working/rosentr/projects/PolySolverLOH/test/test-renal/G_K107-v2/'
+                               , '--normalBAMfile', '/camp/lab/swantonc/working/rosentr/projects/PolySolverLOH/test/test-renal/G_K107-v2/BAMs/B1d1xx1.bam'
+                               , '--BAMDir', '/camp/lab/swantonc/working/rosentr/projects/PolySolverLOH/test/test-renal/G_K107-v2/BAMs/'
+                               , '--hlaPath', '/camp/project/tracerX/working/CRENAL/OUTPUT/G_K107/Rabbit_Hole_Exome/MERGED/POLYSOLVER/HLA_Type/winners.hla.txt'
+                               , '--HLAfastaLoc', '/farm/home/lr-tct-lif/wilson52/installs/polysolver/data/abc_complete.fasta'
+                               , '--CopyNumLoc', '/camp/lab/swantonc/working/rosentr/projects/PolySolverLOH/test/test-renal/G_K107-v2/copyNumSolutions.txt'
+                               , '--mappingStep', 'TRUE'
+                               , '--cleanUp', 'TRUE'
+                               , '--overrideDir', '/camp/lab/swantonc/working/rosentr/projects/PolySolverLOH/test/test-renal/G_K107-v2/flagstat/'
+                               , '--gatkDir', '/camp/apps/eb/software/TracerX-Picard-GATK/0.1-Java-1.7.0_80/bin/'
+                               , '--novoDir', '/camp/apps/eb/software/novoalign/3.07.00/bin/'))
+  
+}
+
 print(full.patient)
 system('echo ${SLURM_JOBID}')
 
-figureDir <- paste(workDir,"/Figures",sep="") # workDir is the outputDir
+figureDir <- paste(workDir,"/Figures",sep="")
 
-# log name, so fucking complex
 log.name  <- paste(workDir, "/running.hla.loh.exome@", gsub(":", "-", gsub(" +", "_", date())), "_log.txt", sep="")
 
 
@@ -129,7 +165,6 @@ extractUniqueReads      <- TRUE
 
 performIntegerCopyNum   <- TRUE
 useLogRbin              <- TRUE
-
 if(CopyNumLoc == 'FALSE'){
   performIntegerCopyNum <- FALSE
   useLogRbin            <- FALSE
@@ -211,20 +246,8 @@ get.partially.matching.reads <- function(workDir, regionDir, BAMDir, BAMfile){
   cmd <- paste('samtools view ', BAMDir, '/', BAMfile, ' | grep -F -f ', kmerFile, ' >> ', regionDir, '/fished.sam', sep = '')
   system(cmd)
 
-  # convert to bam
-  sam <- paste(regionDir,'/fished.sam',sep='')
-  bam <- paste(regionDir,'/fished.bam',sep='')
-  cmd <- paste('samtools view -b -o ',bam,' ',sam,sep='')
-  system(cmd)
-  # sort by name
-  bam_sort_by_name <- paste(regionDir,'/fished.sort_by_name',sep='')
-  sortbyname <- paste('samtools sort -n -o ',bam_sort_by_name,' ',bam,sep='')
-  system(sortbyname)
   # convert to fastq
-  FQ1 <- paste(regionDir,'/fished.1.fastq',sep='')
-  FQ2 <- paste(regionDir,'/fished.2.fastq',sep='')
-  cmd <- paste('bedtools bamtofastq -i ',bam_sort_by_name,' -fq ',FQ1,' -fq2 ',FQ2,sep='')
-  #cmd <- paste('java -jar ', GATKDir, '/SamToFastq.jar I=', regionDir, '/fished.sam F=', regionDir, '/fished.1.fastq F2=', regionDir, '/fished.2.fastq VALIDATION_STRINGENCY=SILENT', sep = '')
+  cmd <- paste('java -jar ', GATKDir, '/SamToFastq.jar I=', regionDir, '/fished.sam F=', regionDir, '/fished.1.fastq F2=', regionDir, '/fished.2.fastq VALIDATION_STRINGENCY=SILENT', sep = '')
   system(cmd)
 
 }
@@ -470,23 +493,13 @@ document.params(params, log.name)
 #############################
 
 BAMfiles  <- list.files(BAMDir, pattern = '.bam$')
-print("bamfile is:")
-print(BAMfiles)
 
 if(length(BAMfiles)<2)
 {
   stop(paste('Cannot find 2 bam files within ',BAMDir))
 }
 
-print("region is:")
-regions <- c()
-for (BAMfile in BAMfiles){
-  BAMid <- strsplit(basename(BAMfile),'.',fixed=TRUE)[[1]][1]
-  regions <- c(regions,BAMid)
-}
-
-#regions   <- sapply(BAMfiles, FUN =function(x) {return(unlist(strsplit(x, split = '.bam'))[1])})
-print(regions)
+regions   <- sapply(BAMfiles, FUN =function(x) {return(unlist(strsplit(x, split = '.bam'))[1])})
 
 hlaAlleles <- read.table(hlaPath, sep = '\t', header = FALSE, as.is = TRUE)
 if(ncol(hlaAlleles) == 3){
@@ -496,9 +509,6 @@ if(ncol(hlaAlleles) == 3){
     hlaAlleles <- unique(sort(hlaAlleles$V1))
   }
 }
-
-print("hla alleles are:")
-print(hlaAlleles)
 
 hlaFasta   <- read.fasta(HLAfastaLoc)
 
@@ -546,9 +556,7 @@ if(mapping.step){
 
   # nix file for patient reference fasta -- novoalign
   write.table(paste('\nnix file for patient reference fasta at ', date(), '\n', sep = ''), file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-  novoindex <- paste(NOVODir,'/novoindex',sep="")
-  #print(novoindex)
-  novoindexCMD <- paste(novoindex,' ', workDir, '/', full.patient, '.patient.hlaFasta.nix', ' ', workDir, '/', full.patient, '.patient.hlaFasta.fa', sep = '')
+  novoindexCMD <- paste('novoindex ', workDir, '/', full.patient, '.patient.hlaFasta.nix', ' ', workDir, '/', full.patient, '.patient.hlaFasta.fa', sep = '')
   write.table(novoindexCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
   system(novoindexCMD)
 
@@ -559,9 +567,8 @@ if(mapping.step){
 
   for(BAMfile in BAMfiles){
     
-    #BAMid <- unlist(strsplit(BAMfile, split = '.bam'))[1] # sample name
-    BAMid <- strsplit(basename(BAMfile),'.',fixed=TRUE)[[1]][1]
-
+    BAMid <- unlist(strsplit(BAMfile, split = '.bam'))[1]
+    
     if(paste(BAMDir, '/', BAMfile, sep = '') == normalBAMfile){
       normalName <- BAMid
     }
@@ -569,8 +576,6 @@ if(mapping.step){
     print(BAMid)
     
     regionDir <- paste(workDir, '/', BAMid, sep = '')
-    
-    # make new dir for each sample
     if(!dir.exists(regionDir))
     {
       dir.create(regionDir,recursive=TRUE)
@@ -584,15 +589,15 @@ if(mapping.step){
     write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
     system(samtoolsCMD)
     
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " 6:29909037-29913661 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6:29909037-29913661 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
     write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
     system(samtoolsCMD)
     
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " 6:31321649-31324964 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6:31321649-31324964 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
     write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
     system(samtoolsCMD)
     
-    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " 6:31236526-31239869 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6:31236526-31239869 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
     write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
     system(samtoolsCMD)
 
@@ -606,53 +611,37 @@ if(mapping.step){
     # write.table(paste(samtoolsCMD, '\n', sep = ''), file = log.name, row.names=FALSE, col.names=FALSE, quote=FALSE, append = TRUE)
     # system(samtoolsCMD)
     
-    # skip hap contigs
-    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_apd_hap1 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    #system(samtoolsCMD)
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_apd_hap1 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    system(samtoolsCMD)
 
-    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_cox_hap2 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    #system(samtoolsCMD)
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_cox_hap2 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    system(samtoolsCMD)
     
-    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_dbb_hap3 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    #system(samtoolsCMD)
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_dbb_hap3 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    system(samtoolsCMD)
     
-    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_mann_hap4 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    #system(samtoolsCMD)
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_mann_hap4 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    system(samtoolsCMD)
     
-    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_mcf_hap5 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    #system(samtoolsCMD)
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_mcf_hap5 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    system(samtoolsCMD)
     
-    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_qbl_hap6 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    #system(samtoolsCMD)
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_qbl_hap6 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    system(samtoolsCMD)
     
-    #samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_ssto_hap7 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
-    #write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    #system(samtoolsCMD)
+    samtoolsCMD <- paste("samtools view ", BAMDir, '/', BAMfile, " chr6_ssto_hap7 >> ",regionDir,"/",BAMid,".chr6region.sam",sep="")
+    write.table(samtoolsCMD, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
+    system(samtoolsCMD)
     
     # turn into fastq -- this step has an error with unpaired mates, but seems to work ok just the same (VALIDATION_STRINGENCY=SILENT)
     write.table(paste('\nturn into fastq at ', date(), '\n', sep = ''), file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
-    
-    # use bedtools bamtofastq, not use SamToFastq.jar
-    # convert sam to bam
-    bam <- paste(regionDir,"/",BAMid,".chr6region.bam",sep="")
-    sam <- paste(regionDir,'/',BAMid,".chr6region.sam",sep="")
-    sam2bam <- paste('samtools view -b -o ',bam,' ',sam,sep="")
-    system(sam2bam)
-    # sort by name
-    bam_sort_by_name <- paste(regionDir,'/',BAMid,'.chr6region.sort_by_name.bam',sep="")
-    sortbyname <- paste('samtools sort -n -o ',bam_sort_by_name,' ',bam,sep="")
-    system(sortbyname)
-    # bam2fq
-    FQ1 <- paste(regionDir,'/',BAMid,".chr6region.1.fastq",sep="")
-    FQ2 <- paste(regionDir,'/',BAMid,".chr6region.2.fastq",sep="")
-    samToFastQ <- paste('bedtools bamtofastq -i ',bam_sort_by_name,' -fq ',FQ1,' -fq2 ',FQ2,sep="")
-    #samToFastQ <- paste("java -jar ",GATKDir,"/SamToFastq.jar ","I=",regionDir,"/",BAMid,".chr6region.sam"," F=",regionDir,"/",BAMid,".chr6region.1.fastq"," F2=",regionDir,"/",BAMid,".chr6region.2.fastq"," VALIDATION_STRINGENCY=SILENT",sep="")
+    samToFastQ <- paste("java -jar ",GATKDir,"/SamToFastq.jar ","I=",regionDir,"/",BAMid,".chr6region.sam"," F=",regionDir,"/",BAMid,".chr6region.1.fastq"," F2=",regionDir,"/",BAMid,".chr6region.2.fastq"," VALIDATION_STRINGENCY=SILENT",sep="")
     write.table(samToFastQ, file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
     system(samToFastQ)
 
@@ -741,7 +730,6 @@ if(mapping.step){
 ############################
 # get coverage for regions # 
 ############################
-normal_name <- strsplit(basename(normalBAMfile),'.',fixed=TRUE)[[1]][1]
 
 for (region in regions)
 {
@@ -749,20 +737,11 @@ for (region in regions)
   write.table(paste('\nget coverage of HLA alleles for region: ', region, ' at ', date(), '\n', sep = ''), file = log.name, quote = FALSE, row.names = FALSE, col.names = FALSE, append = TRUE)
   
   regionDir <- paste(workDir, '/', region, sep = '')
-  # the region is the sample name...
-  #BAMfiles  <- grep('filtered.bam$', grep('type',list.files(regionDir),value=TRUE),value=TRUE)
-  #BAMfiles <- list.files(regionDir,pattern="filtered.bam$",full.names = TRUE) # abs path (six bam files)
-  BAMfiles <- list.files(regionDir,pattern="filtered.bam$")
+  BAMfiles  <- grep('filtered.bam$', grep('type',list.files(regionDir),value=TRUE),value=TRUE)
 
-  #if(paste(BAMDir, '/', region, '.bam', sep = '') == normalBAMfile){
-  #  type <- 'normal'
-  #} else{
-  #  type <- 'tumor'
-  #}
-
-  if (region == normal_name){
+  if(paste(BAMDir, '/', region, '.bam', sep = '') == normalBAMfile){
     type <- 'normal'
-  }else{
+  } else{
     type <- 'tumor'
   }
   
@@ -770,7 +749,7 @@ for (region in regions)
   for (BAMfile in c(BAMfiles))
   {      
     
-    hlaAllele <- grep(pattern = 'hla', x = unlist(strsplit(BAMfile, split = '\\.')), value = TRUE) # hla value
+    hlaAllele <- grep(pattern = 'hla', x = unlist(strsplit(BAMfile, split = '\\.')), value = TRUE)
 
     mpileupFile <- paste(workDir, '/', region,".",hlaAllele,".",type,".mpileup",sep="")
     
@@ -781,13 +760,14 @@ for (region in regions)
     system(cmd)
     
   }
+
 }
 
 # also extract number of unique reads sequenced in tumor and normal
 if(runWithNormal){
 
-  #normalName <- regions[which(paste(BAMDir, '/', regions, '.bam', sep = '') == normalBAMfile)]
-  normalName <- normal_name
+  normalName <- regions[which(paste(BAMDir, '/', regions, '.bam', sep = '') == normalBAMfile)]
+  
   if(!override){
     regionUniqMappedRegions <- getUniqMapReads(workDir = workDir, BAMDir = BAMDir, override = FALSE)
   }
@@ -807,8 +787,8 @@ if(runWithNormal){
 # compare coverage between alleles # 
 ####################################
 
-#normalName <- regions[which(paste(BAMDir, '/', regions, '.bam', sep = '') == normalBAMfile)]
-normalName <- normal_name
+normalName <- regions[which(paste(BAMDir, '/', regions, '.bam', sep = '') == normalBAMfile)]
+
 # let's load the winners
 # next, we can look at each mpileupFile, and assess whether we see differences in coverage between the two. 
 # let's look at a region of interest. 
@@ -816,13 +796,10 @@ PatientOutPut <- c()
 
 for (region in regions)
 {
-  if (region == normalName){
-    # skip normal file
+
+  if(paste(BAMDir, '/', region, '.bam', sep = '') == normalBAMfile){
     next
   }
-  #if(paste(BAMDir, '/', region, '.bam', sep = '') == normalBAMfile){
-  #  next
-  #}
   
   print(region)
 
@@ -857,7 +834,6 @@ for (region in regions)
       if(length(HLA_As)<=1)
       {
         next
-        # skip gene with two same alleles
       }
       HLA_A_type1 <- HLA_As[1]
       HLA_A_type2 <- HLA_As[2]
@@ -869,18 +845,12 @@ for (region in regions)
       #perform local pairwise alignement
       {
         seq1 <- PasteVector(toupper(HLA_type1Fasta),sep="")
-        print("seq1 is:")
-        print(seq1)
         seq2 <- PasteVector(toupper(HLA_type2Fasta),sep="")
         sigma <- nucleotideSubstitutionMatrix(match = 2, mismatch = -1, baseOnly = TRUE)
         
         tmp <- pairwiseAlignment(seq1, seq2, substitutionMatrix = sigma, gapOpening = -2,gapExtension = -4, scoreOnly = FALSE,type='local')
-        print("align info is:")
-        print(tmp)
         
         missMatchPositions <- getMisMatchPositionsPairwiseAlignment(tmp,returnlist=TRUE)
-        print("missMatchPositions is:")
-        print(missMatchPositions)
         if(length(missMatchPositions$diffSeq1) == 0){
           next
         }
@@ -1548,7 +1518,7 @@ for (region in regions)
 
 
 
-################################# FIG START #################################
+
   #plotting
   if(plottingStep)
   {
@@ -1556,7 +1526,7 @@ for (region in regions)
     pdf(paste(figureDir, '/', region,".minCoverage_",minCoverageFilter,".HLA.pdf",sep=""),width=10,height=6)
     for (HLA_gene in unique(substr(hlaAlleles, 1,5)))
     {
-      # hla_a/hla_b/hla_c
+
       if(file.exists(paste(figureDir, '/', region, '.', HLA_gene, '.tmp.data.plots.RData', sep = ''))){
         load(paste(figureDir, '/', region, '.', HLA_gene, '.tmp.data.plots.RData', sep = ''))
       } else{
@@ -2074,9 +2044,7 @@ for (region in regions)
     }     
     dev.off()
   }
-}
-
-################################# FIG END #################################
+}  
 
 
 
