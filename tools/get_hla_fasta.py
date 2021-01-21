@@ -8,6 +8,7 @@ def parse_args():
     AP = argparse.ArgumentParser("get hla A/B/C allels' fasta sequence")
     AP.add_argument('-i',help='OptiType result file',dest='hla_res')
     AP.add_argument('-o',help='outfile',dest='outfile')
+    AP.add_argument('-o2',help='output all alleles belong to this 4-digit',dest='outfile2')
 
     return AP.parse_args()
 
@@ -63,42 +64,53 @@ def main():
 
 
     outfile = open(args.outfile,'w')
+    outfile2 = open(args.outfile2,'w')
 
     final_allele = defaultdict(list)
 
     for x in hla2fa_new:
         # 循环每个hla allele
         seq = hla2fa_new[x]
+        a = ">%s" % (x)
+
         if hla_a1 in x:
             final_allele[hla_a1].append(seq) # hla_a1是4位,x可能为4-8位
-        else:
-            print("can not find ref hla for %s in IMGT-HLA database" % (hla_a1))
+
+            # write for outfile2
+            outfile2.write(a+'\n')
+            outfile2.write(seq+'\n')
 
         if hla_a2 in x:
             final_allele[hla_a2].append(seq)
-        else:
-            print("can not find ref hla for %s in IMGT-HLA database" % (hla_a2))
+
+            outfile2.write(a+'\n')
+            outfile2.write(seq+'\n')
 
         if hla_b1 in x:
             final_allele[hla_b1].append(seq)
-        else:
-            print("can not find ref hla for %s in IMGT-HLA database" % (hla_b1))
+
+            outfile2.write(a+'\n')
+            outfile2.write(seq+'\n')
 
         if hla_b2 in x:
             final_allele[hla_b2].append(seq)
-        else:
-            print("can not find ref hla for %s in IMGT-HLA database" % (hla_b2))
+
+            outfile2.write(a+'\n')
+            outfile2.write(seq+'\n')
 
         if hla_c1 in x:
             final_allele[hla_c1].append(seq)
-        else:
-            print("can not find ref hla for %s in IMGT-HLA database" % (hla_c1))
+
+            outfile2.write(a+'\n')
+            outfile2.write(seq+'\n')
 
         if hla_c2 in x:
             final_allele[hla_c2].append(seq)
-        else:
-            print("can not find ref hla for %s in IMGT-HLA database" % (hla_c2))
 
+            outfile2.write(a+'\n')
+            outfile2.write(seq+'\n')
+            
+        
     # write file
     hla_a1_12 = val[1].split('*')[1].split(':')[0] # 1-2位
     hla_a1_34 = val[1].split('*')[1].split(':')[1] # 3-4位
@@ -106,6 +118,8 @@ def main():
     seq = final_allele[hla_a1][0] # 取第一个allele（可能为4-8位）作为该4位allele的ref
     outfile.write(a+'\n')
     outfile.write(seq+'\n')
+
+
 
 
     hla_a2_12 = val[2].split('*')[1].split(':')[0]

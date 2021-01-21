@@ -90,7 +90,8 @@ def main():
 
     # get HLA allele fa seq
     hla_fa = "%s/patient.hlaFasta.fa" % (args.outdir)
-    cmd = "%s %s/tools/get_hla_fasta.py -i %s -o %s" % (args.py3,bin_dir,raw_hla_res,hla_fa)
+    hla_fa_all = "%s/patient.hlaFasta.all.4digit.alleles.fa" % (args.outdir) # not used for the align info is so complex
+    cmd = "%s %s/tools/get_hla_fasta.py -i %s -o %s -o2 %s" % (args.py3,bin_dir,raw_hla_res,hla_fa,hla_fa_all)
     of.write('\n'+"###get hla fasta"+'\n')
     of.write(cmd+'\n')
 
