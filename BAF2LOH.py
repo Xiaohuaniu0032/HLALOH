@@ -9,6 +9,7 @@ def parse_args():
     AP.add_argument('-indir',help='result dir',dest='indir')
     AP.add_argument('-name',help='sample name',dest='name')
     AP.add_argument('-bam',help='bam',dest='bam')
+    #AP.add_argument('-r',help='hla ref',dest='ref')
     
     return AP.parse_args()
 
@@ -48,7 +49,7 @@ def main():
         # pileup file
         pileupFile = "%s/%s.%s.pileup" % (args.indir,args.name,a)
         hla_fa = "%s/patient.hlaFasta.fa" % (args.indir)
-        cmd = "samtools mpileup -x -Q 0 -f %s %s >%s" % (hla_fa,sort_bam,pileupFile)
+        cmd = "samtools mpileup -x -Q 0 -f %s %s >%s" % (sort_bam,pileupFile)
         os.system(cmd)
         #of.write(cmd+'\n')
         
