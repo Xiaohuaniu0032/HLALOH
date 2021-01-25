@@ -1,2 +1,0 @@
-Ploidy	tumorPurity	tumorPloidy
-20091701T	2.22	1.00	2.22
