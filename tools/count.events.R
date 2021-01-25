@@ -3,6 +3,8 @@ args <- commandArgs(TRUE)
 
 BAMfile <- args[1]
 n <- args[2]
+of <- args[3]
+
 
 x              <- scanBam(BAMfile, index = BAMfile, param=ScanBamParam(what = scanBamWhat(), tag = 'NM'))
 #print(x)
@@ -31,8 +33,9 @@ y <- readIDs[as.numeric(names(passed))]
 #print(y)
 #print(table(y))
 y <- names(table(y)[which(table(y) == 2)]) # only use paired reads as final useful reads
-
-#print(y) 
+#return(y)
+#print(y)
+write.table(y,file=of,sep='\t',quote=FALSE,row.names=FALSE,col.names=FALSE)
 
 
 
