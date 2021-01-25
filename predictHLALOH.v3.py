@@ -24,6 +24,7 @@ def parse_args():
     AP.add_argument('-bedtools',help='bedtools path',dest='bedtools',default='/home/fulongfei/miniconda3/bin/bedtools')
     AP.add_argument('-bwa',help='bwa path',dest='bwa',default='/usr/bin/bwa')
     AP.add_argument('-samts',help='samtools bin',dest='samtools',default='/home/fulongfei/miniconda3/bin/samtools')
+    AP.add_argument('-jre',help='java JRE',dest='jre',default='/usr/bin/java')
     AP.add_argument('-od',help='output dir',dest='outdir')
 
     return AP.parse_args()
@@ -111,7 +112,7 @@ def main():
     # aln two allele and get het pos and cal BAF
     of.write('\n'+'###baf2loh main script for normal'+'\n')
     normal_proper_aln_bam = "%s/%s.chr6region.patient.reference.hlas.sort.markdup.proper_aln.bam" % (args.outdir,args.nname)
-    cmd = "%s %s/BAF2LOH.py -indir %s -name %s -bam %s" % (args.py3,bin_dir,args.outdir,args.nname,normal_proper_aln_bam)
+    cmd = "%s %s/BAF2LOH.py -indir %s -name %s -bam %s -jre %s" % (args.py3,bin_dir,args.outdir,args.nname,normal_proper_aln_bam,args.jre)
     of.write(cmd+'\n')
 
 
@@ -129,7 +130,7 @@ def main():
     # aln two allele and get het pos and cal BAF
     of.write('\n'+'###baf2loh main script for tumor'+'\n')
     tumor_proper_aln_bam = "%s/%s.chr6region.patient.reference.hlas.sort.markdup.proper_aln.bam" % (args.outdir,args.tname)
-    cmd = "%s %s/BAF2LOH.py -indir %s -name %s -bam %s" % (args.py3,bin_dir,args.outdir,args.tname,tumor_proper_aln_bam)
+    cmd = "%s %s/BAF2LOH.py -indir %s -name %s -bam %s -jre %s" % (args.py3,bin_dir,args.outdir,args.tname,tumor_proper_aln_bam,args.jre)
     of.write(cmd+'\n\n\n\n')
 
     
@@ -174,21 +175,7 @@ def main():
 
 
     # BAF to LOH main method
-    
-    ### for normal
-    normal_a_baf = "%s/%s.hla_a_BAF.txt" % (args.outdir,args.nname)
-    normal_b_baf = "%s/%s.hla_b_BAF.txt" % (args.outdir,args.nname)
-    normal_c_baf = "%s/%s.hla_c_BAF.txt" % (args.outdir,args.nname)
-    
-    cmd = "perl %s/tools/determine_HLALOH_by_BAF.pl %s %s %s %s %s" % (bin_dir,normal_a_baf,normal_b_baf,normal_c_baf,args.outdir,args.nname)
-    of.write(cmd+'\n')
-
-    ### for tumor
-    tumor_a_baf = "%s/%s.hla_a_BAF.txt" % (args.outdir,args.tname)
-    tumor_b_baf = "%s/%s.hla_b_BAF.txt" % (args.outdir,args.tname)
-    tumor_c_baf = "%s/%s.hla_c_BAF.txt" % (args.outdir,args.tname)
-
-    cmd = "perl %s/tools/determine_HLALOH_by_BAF.pl %s %s %s %s %s" % (bin_dir,tumor_a_baf,tumor_b_baf,tumor_c_baf,args.outdir,args.tname)
+    cmd = "perl %s/tools/determine_HLALOH_by_BAF.pl %s %s %s %s" % (bin_dir,args.outdir,args.nname,args.tname,args.outdir)
     of.write(cmd+'\n')
 
     of.close()
