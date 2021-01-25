@@ -9,6 +9,7 @@ def parse_args():
     AP.add_argument('-indir',help='result dir',dest='indir')
     AP.add_argument('-name',help='sample name',dest='name')
     AP.add_argument('-bam',help='bam',dest='bam')
+    AP.add_argument('-jre',help='java JRE',dest='jre')
     #AP.add_argument('-r',help='hla ref',dest='ref')
     
     return AP.parse_args()
@@ -44,12 +45,28 @@ def main():
         # index
         cmd = "samtools index %s" % (sort_bam)
         os.system(cmd)
+
+        #filter out reads that have too many events
+        pass_reads_file = "%s/%s.type.%s.passed.reads.txt" % (args.indir,args.name,a)
+        cmd = "Rscript %s/tools/count.events.R %s 1 %s" % (bin_dir,sort_bam,pass_reads_file)
+        os.system(cmd)
+
+        # extract pass reads
+        pass_bam = "%s/%s.type.%s.filtered.bam" % (args.indir,args.name,a)
+        cmd = "%s -jar %s/gatkDir/picard-tools-1.119/FilterSamReads.jar I=%s FILTER=includeReadList READ_LIST_FILE=%s OUTPUT=%s" % (args.jre,bin_dir,sort_bam,pass_reads_file,pass_bam)
+        print(cmd)
+        os.system(cmd)
+
+        # index
+        cmd = "samtools index %s" % (pass_bam)
+        os.system(cmd)
         #of.write(cmd+'\n')
         
         # pileup file
         pileupFile = "%s/%s.%s.pileup" % (args.indir,args.name,a)
-        hla_fa = "%s/patient.hlaFasta.fa" % (args.indir)
-        cmd = "samtools mpileup -x -Q 0 -f %s %s >%s" % (sort_bam,pileupFile)
+        hla_fa = "%s/patient.hlaFasta.fa" % (args.indir) # hla ref file
+        cmd = "samtools mpileup -x -q 0 -Q 0 -f %s %s >%s" % (hla_fa,pass_bam,pileupFile)
+        print(cmd)
         os.system(cmd)
         #of.write(cmd+'\n')
         
