@@ -21,7 +21,8 @@ def main():
     this_dir = os.path.split(os.path.realpath(__file__))[0]
     upper_dir = os.path.dirname(this_dir)
     #hla_fa = "%s/OptiType-1.3.2/data/hla_reference_dna.fasta" % (upper_dir)
-    hla_fa = "%s/DB/hla_fa_hg19/hla_abc_gen.fasta" % (upper_dir)
+    #hla_fa = "%s/DB/hla_fa_hg19/hla_abc_gen.fasta" % (upper_dir)
+    hla_fa = "%s/DB/hla_fa_hg19/hla_abc_cds.fasta" % (upper_dir)
     print("IMGT-HLA database is: %s" % (hla_fa))
 
     hla = open(hla_fa,'r')
