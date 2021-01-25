@@ -3,83 +3,129 @@ use warnings;
 #use Getopt::Long;
 use POSIX qw(ceil);
 
-my ($hla_a_baf,$hla_b_baf,$hla_c_baf,$resdir,$name) = @ARGV;
+my ($baf_dir,$normal_name,$tumor_name,$outdir) = @ARGV;
 
-#my $hla_a_baf = "$resdir/hla_a_BAF.txt"; # maybe empty
-#my $hla_b_baf = "$resdir/hla_b_BAF.txt";
-#my $hla_c_baf = "$resdir/hla_c_BAF.txt";
-
-my $of = "$resdir/$name\.hlaloh.result.xls";
-
+my $of = "$outdir/$tumor_name\.hlaloh.result.xls";
 
 # default cutoff
 my $loh_cutoff_lower = 0.4;
 my $loh_cutoff_upper = 0.6;
 my $loh_pct_cutoff = 0.6;
 
-
+# how to determine the LOH by BAF distribution?
+# median BAF & sd(BAF)
 
 open O, ">$of" or die;
-print O "sample\tA_het_pos_num\tA_loh_pos_num\tA_loh_pos_pct\tmedian_A_BAF\tHLA_A_CopyNumber\tif_A_loh\tB_het_pos_num\tB_loh_pos_num\tB_loh_pos_pct\tmedian_B_BAF\tHLA_B_CopyNumber\tif_B_loh\tC_het_pos_num\tC_loh_pos_num\tC_loh_pos_pct\tmedian_C_BAF\tHLA_C_CopyNumber\tif_C_loh\n";
+print O "Sample\tGene\tHetPosNum\tLikelyLoHPosNum\tLoHPosPercent(%)\tMedianBAF\tCopyNumber\tIfLoH\n";
 
 
-my $cnFile = "$resdir/$name\.CopyNumber.xls";
+# tumor copy number
+my $cnFile = "$baf_dir/$tumor_name\.CopyNumber.xls";
+
 if (!-e $cnFile){
     die "can not find $cnFile\n";
 }
 
 
-my $hla_a_info = &stat_loh_pos($hla_a_baf,$cnFile,"A");
-my $hla_b_info = &stat_loh_pos($hla_b_baf,$cnFile,"B");
-my $hla_c_info = &stat_loh_pos($hla_c_baf,$cnFile,"C");
-
-my @a = split /\t/, $hla_a_info;
-my @b = split /\t/, $hla_b_info;
-my @c = split /\t/, $hla_c_info;
-
-my $a_loh = &if_loh($hla_a_info);
-my $b_loh = &if_loh($hla_b_info);
-my $c_loh = &if_loh($hla_c_info);
+my $hla_a_baf_N = "$baf_dir/$normal_name\.hla_a_BAF.txt";
+my $hla_a_baf_T = "$baf_dir/$tumor_name\.hla_a_BAF.txt";
+my $hla_a_info = &stat_loh_info($hla_a_baf_N,$hla_a_baf_T,$cnFile,'HLA-A');
 
 
-print O "$name\t$a[0]\t$a[1]\t$a[2]\t$a[3]\t$a[4]\t$a_loh\t$b[0]\t$b[1]\t$b[2]\t$b[3]\t$b[4]\t$b_loh\t$c[0]\t$c[1]\t$c[2]\t$c[3]\t$c[4]\t$c_loh\n";
+my $hla_b_baf_N = "$baf_dir/$normal_name\.hla_b_BAF.txt";
+my $hla_b_baf_T = "$baf_dir/$tumor_name\.hla_b_BAF.txt";
+my $hla_b_info = &stat_loh_info($hla_b_baf_N,$hla_b_baf_T,$cnFile,'HLA-B');
+
+my $hla_c_baf_N = "$baf_dir/$normal_name\.hla_c_BAF.txt";
+my $hla_c_baf_T = "$baf_dir/$tumor_name\.hla_c_BAF.txt";
+my $hla_c_info = &stat_loh_info($hla_c_baf_N,$hla_c_baf_T,$cnFile,'HLA-C');
+
+my $a_loh = &determine_LOH($hla_a_info);
+my $b_loh = &determine_LOH($hla_b_info);
+my $c_loh = &determine_LOH($hla_c_info);
+
+print O "$tumor_name\t$hla_a_info\t$a_loh\n";
+print O "$tumor_name\t$hla_b_info\t$b_loh\n";
+print O "$tumor_name\t$hla_c_info\t$c_loh\n";
 
 close O;
 
-sub if_loh{
+
+
+
+sub determine_LOH{
     my ($loh_info) = @_;
-    my $loh;
-    my @val = split /\t/, $loh_info; # my $val = "$het_pos_n\t$loh_pos_n\t$loh_pct\t$median_baf\t$hla_cn";
-    #print($val[2]);
-    #print "$loh_info\n";
-    if ($val[2] > $loh_pct_cutoff){ # 0.4~0.6之外的点的百分比，默认60%
-        $loh = "YES";
-    }else{
-        $loh = "NO";
+    my @val = split /\t/, $loh_info; # my $val = "$gene\t$het_pos_n\t$loh_pos_n\t$loh_pct\t$median_baf\t$hla_cn";
+
+    # how to determine LOH by BAF distribution?
+    # 1. loh pos pct >= 60% and
+    # 2. median BAF >= 0.6
+
+    # if het_pos_n <= 10, then can not determine LOH status
+
+    my $loh_status;
+
+    if ($val[1] <= 10){
+        $loh_status = 'NA';
+        print "can not determine LOH status for $val[0]: het pos is $val[1] (<=10)\n";
+
+        return($loh_status);
     }
 
-    return($loh);
+    if ($val[3] > 0.65 and $val[-2] >= 0.6){
+        $loh_status = 'YES';
+    }else{
+        $loh_status = 'NO';
+    }
+
+    return($loh_status);
 }
 
 
-sub stat_loh_pos{
-    # 统计a/b/c每个allele的信息（杂合位点个数，loh位点个数，BAF中位值，是否为LOH）
-    my ($baf_file,$cn_file,$gene) = @_;
+sub stat_loh_info{
+    # 统计A/B/C每个allele信息:杂合位点个数/可能的LOH位点个数/LOH位点百分比/BAF中位值/拷贝数
+    my ($normal_baf,$tumor_baf,$tumor_cn_file,$gene) = @_;
 
-    my ($het_pos_n,$loh_pos_n,$loh_pct,$median_baf,$hla_cn) = (0,0,0,0,0);
-    
-    my @baf;
-    open IN, "$baf_file" or die;
+    my %eff_het_pos_normal;
+    open IN, "$normal_baf" or die;
     <IN>;
     while (<IN>){
         chomp;
         my @arr = split /\t/;
-        $het_pos_n += 1;
-        if ($arr[-1] > $loh_cutoff_upper || $arr[-1] < $loh_cutoff_lower){
-            # BAF > 0.6 OR BAF < 0.4
-            $loh_pos_n += 1;
+        next if ($arr[-3] <= 50); # skip low depth pos
+        if ($arr[-1] >= $loh_cutoff_lower and $arr[-1] <= $loh_cutoff_upper){
+            $eff_het_pos_normal{$arr[1]} = 1;
         }
-        push @baf, $arr[-1];
+    }
+    close IN;
+
+    # how many eff het pos in normal?
+    my $eff_het_n = scalar(keys %eff_het_pos_normal);
+
+    my ($het_pos_n,$loh_pos_n,$loh_pct,$median_baf,$hla_cn) = (0,0,0,0,0);
+
+    my @baf;
+    open IN, "$tumor_baf" or die;
+    <IN>;
+    while (<IN>){
+        chomp;
+        my @arr = split /\t/;
+        if (exists $eff_het_pos_normal{$arr[1]}){
+            print "$_\n";
+            # this pos is ok in normal, and can be used to stat tumor baf info
+            # stat baf info
+            $het_pos_n += 1;
+            
+            if ($arr[-1] > 0.5){
+                push @baf, $arr[-1];
+            }else{
+                push @baf, $arr[-2];
+            }
+
+            if ($arr[-1] <= $loh_cutoff_lower or $arr[-1] >= $loh_cutoff_upper){
+                $loh_pos_n += 1;
+            }
+        }
     }
     close IN;
 
@@ -99,46 +145,25 @@ sub stat_loh_pos{
 
     
     my %gene_cn;
-    #my @genes;
     open IN, "$cnFile" or die;
     <IN>;
     while (<IN>){
         chomp;
         my @arr = split /\t/;
-        #$gene_cn{$arr[1]} = "$arr[2]\t$arr[3]\t$arr[-2]"; # gene=>chr/start/cn
-        $gene_cn{$arr[1]} = $arr[-2];
-        #push @genes,$arr[1];
+        $gene_cn{$arr[1]} = $arr[-2]; # gene=>cn
     }
     close IN;
 
-    if ($gene eq "A"){
-        if (exists $gene_cn{"HLA-A"}){
-            $hla_cn = $gene_cn{"HLA-A"};
-        }else{
-            $hla_cn = "NA";
-        }
+    # gene is HLA-A or HLA-B or HLA-C
+    if (exists $gene_cn{$gene}){
+        $hla_cn = $gene_cn{$gene};
+    }else{
+        $hla_cn = "NA";
     }
 
-    if ($gene eq "B"){
-        if (exists $gene_cn{"HLA-B"}){
-            $hla_cn = $gene_cn{"HLA-B"};
-        }else{
-            $hla_cn = "NA";
-        }
-    }
-
-    if ($gene eq "C"){
-        if (exists $gene_cn{"HLA-C"}){
-            $hla_cn = $gene_cn{"HLA-C"};
-        }else{
-            $hla_cn = "NA";
-        }
-    }
-
-    #print "$hla_cn\n";
-
-    my $val = "$het_pos_n\t$loh_pos_n\t$loh_pct\t$median_baf\t$hla_cn";
+    my $val = "$gene\t$het_pos_n\t$loh_pos_n\t$loh_pct\t$median_baf\t$hla_cn";
     print("$val\n");
+    
     return($val);
 }
 
