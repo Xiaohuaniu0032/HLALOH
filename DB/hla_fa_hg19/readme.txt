@@ -15,5 +15,5 @@ https://github.com/ANHIG/IMGTHLA/blob/Latest/fasta/C_gen.fasta
 cat A_gen.fasta B_gen.fasta C_gen.fasta >hla_abc_gen.fasta
 
 # CDS
-
+cat A_nuc.fasta B_nuc.fasta C_nuc.fasta >hla_abc_cds.fasta
 
