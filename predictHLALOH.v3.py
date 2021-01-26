@@ -16,7 +16,7 @@ def parse_args():
     AP.add_argument('-r',help='fasta file',dest='fasta',default='/data1/database/b37/human_g1k_v37.fasta')
     AP.add_argument('-cnvRefDir',help='cnv ref control dir',dest='cnvRefDir',default='/data1/workdir/fulongfei/git_repo/HLALOH/DB/cnv_ref/889/DB')
     AP.add_argument('-bed',help='bed file',dest='bed',default='/home/wangce/workdir/database/humandb/panel/889genes_20191225.bed')
-    AP.add_argument('-snpBED',help='snp bed file',dest='snpBED',default='/data1/workdir/fulongfei/git_repo/HLALOH/BAF/889gene.snp.bed')
+    #AP.add_argument('-snpBED',help='snp bed file',dest='snpBED',default='/data1/workdir/fulongfei/git_repo/HLALOH/BAF/889gene.snp.bed')
     AP.add_argument('-py2',help='python2 path',dest='py2',default='/home/fulongfei/miniconda3/envs/py27/bin/python2')
     AP.add_argument('-py3',help='python3 path',dest='py3',default='/home/fulongfei/miniconda3/bin/python3')
     AP.add_argument('-sbb',help='sambamba path',dest='sbb',default='/home/fulongfei/miniconda3/bin/sambamba')
@@ -41,22 +41,22 @@ def main():
     of = open(runsh,'w')
 
     # cal snp vaf for tumor to visually estimate tumor's purity and ploidy
-    of.write("###cal tumor snp vaf"+'\n')
-    tumor_pileup = "%s/tumor.mpileup" % (args.outdir)
-    cmd = "%s mpileup -x -Q 0 -d 8000 -f %s -l %s %s >%s" % (args.samtools,args.fasta,args.snpBED,args.tbam,tumor_pileup) # -x will output right baseQ, -Q will not skip any low baseQ
+    #of.write("###cal tumor snp vaf"+'\n')
+    #tumor_pileup = "%s/tumor.mpileup" % (args.outdir)
+    #cmd = "%s mpileup -x -Q 0 -d 8000 -f %s -l %s %s >%s" % (args.samtools,args.fasta,args.snpBED,args.tbam,tumor_pileup) # -x will output right baseQ, -Q will not skip any low baseQ
     #of.write(cmd+'\n')
 
     # pileup to vaf
-    snp_vaf = "%s/tumor.snp.vaf" % (args.outdir)
-    cmd = "%s %s/BAF/pileup2vaf.py %s %s" % (args.py3,bin_dir,tumor_pileup,snp_vaf)
+    #snp_vaf = "%s/tumor.snp.vaf" % (args.outdir)
+    #cmd = "%s %s/BAF/pileup2vaf.py %s %s" % (args.py3,bin_dir,tumor_pileup,snp_vaf)
     #of.write(cmd+'\n')
 
     # plot fig
-    cmd = "%s %s/BAF/plot_vaf_by_chr.r %s %s %s" % (args.rscript,bin_dir,snp_vaf,args.tname,args.outdir)
+    #cmd = "%s %s/BAF/plot_vaf_by_chr.r %s %s %s" % (args.rscript,bin_dir,snp_vaf,args.tname,args.outdir)
     #of.write(cmd+'\n\n')
 
 
-    ############ MAIN STEP ############
+    ############################# MAIN STEP ###############################
 
     # extract HLA region read1/read2 from normal bam to do HLA typing
     of.write("###extract HLA reads"+'\n')
