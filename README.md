@@ -2,137 +2,134 @@
 detect HLA LOH from NGS data
 
 ## Usage
-`python3 predictHLALOH.py -nbam <normal.bam> -tbam <tumor.bam> -bed <bed file> -nname <normal name> -tname <tumor name> -fa <hg19 fasta> -ref <cnv control dir> [-p <889|338> | -snp <snp bed file>] -od <outdir>`
-
-## Versions
-v1: use ascat to estimate tumor purity and ploidy
-v2: not use ascat, just use BAF info to directly estimate LOH
-v3: not use novoalign, use BWA insteat. besides, use new IMGT HLA ref (whole gene nt seq), not use OptiType-1.3.2 hla\_reference\_dna.fasta file (this is the CDS nt seq)
+`python3 predictHLALOH.v3.py -nbam <normal.bam> -tbam <tumor.bam> -nname <normal_name> -tname <tumor_name> -r <hg19.fasta> -cnvRefDir <Dir> -bed <*.BED> -py2 <python2> -py3 <python3> -sbb <sambamba> -rscript <Rscript> -bedtools <BEDTOOLS> -bwa <BWA> -samts <SAMTOOLS> -jre <JRE> -od <outputDir>`
 
 ```
-$ python predictHLALOH.py -h
-usage: detect HLA LOH from capture NGS data using paired tumor/normal
-       [-h] [-nbam NBAM] [-tbam TBAM] [-bed BED] [-nname NNAME] [-tname TNAME]
-       [-fa FASTA] [-ref REF] [-p PANEL] [-snp SNP_BED] [-od OUTDIR]
+$ python3 predictHLALOH.v3.py -h
+usage: detect HLA LOH by BAF using paired tumor-normal data [-h] [-tbam TBAM] [-nbam NBAM] [-tname TNAME]
+                                                            [-nname NNAME] [-r FASTA] [-cnvRefDir CNVREFDIR]
+                                                            [-bed BED] [-py2 PY2] [-py3 PY3] [-sbb SBB]
+                                                            [-rscript RSCRIPT] [-bedtools BEDTOOLS] [-bwa BWA]
+                                                            [-samts SAMTOOLS] [-jre JRE] [-od OUTDIR]
 
 optional arguments:
-  -h, --help    show this help message and exit
-  -nbam NBAM    normal bam file
-  -tbam TBAM    tumor bam file
-  -bed BED      bed file
-  -nname NNAME  normal sample name
-  -tname TNAME  tumor sample name
-  -fa FASTA     fasta file
-  -ref REF      cnv ref control dir
-  -p PANEL      panel, can be <889|338>
-  -snp SNP_BED  snp bed
-  -od OUTDIR    output dir
+  -h, --help            show this help message and exit
+  -tbam TBAM            tumor bam file
+  -nbam NBAM            normal bam file
+  -tname TNAME          tumor sample name
+  -nname NNAME          tumor sample name
+  -r FASTA              fasta file
+  -cnvRefDir CNVREFDIR  cnv ref control dir
+  -bed BED              bed file
+  -py2 PY2              python2 path
+  -py3 PY3              python3 path
+  -sbb SBB              sambamba path
+  -rscript RSCRIPT      R path
+  -bedtools BEDTOOLS    bedtools path
+  -bwa BWA              bwa path
+  -samts SAMTOOLS       samtools bin
+  -jre JRE              java JRE
+  -od OUTDIR            output dir
 
 ```
-
-### parameter specification
-`-nbam`: normal bam
-
-`-tbam`: tumor bam
-
-`-bed`: bed file
-
-`-nname`: normal sample name
-
-`-tname`: tumor sample name
-
-`fa`: hg19 fasta
-
-`-ref`: cnv control dir
-
-`-p`: panel, this argument specified the `snp bed file`
-
-`-snp`: snp bed
-
-`-od`: output dir
-
-
-***NOTE:***
-you can specifiy `-p` or `-snp`, `-p` will be considered first. `-p` can give you a snp bed file (this bed file is included in this git repo) by `-p`.
-
 ## Method
-*we will follow this paper's method:* `Allele-Specific HLA Loss and Immune Escape in Lung Cancer Evolution, Cell, 2017`
+For WES data, there exists a published tool `lohhla` for HLA LOH detection, but for small and medium-size capture panel data, we find that the `lohhla` is not very appropriate because `lohhla` needs to estimate tumor purity and ploidy, which is hard to estimate from panel data. besides the tumor purity and ploidy, we also find that the results output by `lohhla` are a little confused.
 
-This paper published an open-source software called `lohhla`, you can see official doc `https://bitbucket.org/mcgranahanlab/lohhla/src/master/`
+We just use the BAF distribution to infer the HLA LOH status directly, although the method is simple and intuitional, but the result is effective （see below fig).
 
-*the main steps of `lohhla` are:*
+[tumor purity & BAF distribution](https://github.com/Xiaohuaniu0032/HLALOH/blob/master/qpure.plos.one.png)
 
-1. extract HLA reads
-2. create HLA allele specific BAM files
-3. determine coverage at mismatch positions between homologous HLA alleles
-4. obtain HLA specific logR and BAF
-5. determine HLA haplotype specific copy number
+For detail of `lohhla`, you can see `Allele-Specific HLA Loss and Immune Escape in Lung Cancer Evolution, Cell, 2017` and official doc `https://bitbucket.org/mcgranahanlab/lohhla/src/master/`
 
-the `lohhla` software needs several files as input, which means that you need to prepare these files before you run `lohhla`):
+*the main steps of our methods are:*
 
-* hla typing result (we use Optitype software)
-* tumor purity and ploidy (we use ASCAT software)
+1. hla typing using normal bam
+2. get six hla alleles from IMGT/HLA database to make patient-specific HLA reference
+3. extract hla region reads from tumor bam
+4. align tumor fastq to patient-specific HLA ref
+5. get allele-specific bam
+6. filter allele-specific bam (mismatch + ins + del need to <= 1)
+7. for A/B/C allele, determine het positions
+8. calculate BAF at those het positions (for normal and tumor sample)
+9. calculate normal and tumor sample's copy number (copy number information is not used to infer LoH status at present, but the pipeline still need to call CNV at present, please note this)
+10. infer LoH status by BAF distribution at het positions (first filter out abnormal het positions in normal sample, then infer LoH status using left het positions BAF)
 
-the `ASCAT` software needs below files:
+## How to determine LoH by BAF distribution?
+after we get filtered tumor BAF file, we use two information to infer LoH status:
 
-* logR (we use self-developed software: CNVscan)
-* BAF (we use self-developed python script)
+1. likely loh het pos number and total het pos
+
+2. median BAF
+
+let us mark `likely loh het pos number` as `n`, and mark `total het pos` as `N`, then we can calculate loh pos percentage: `n/N`.
+
+For a specific HLA allele, if `n/N` >= 0.65 and `median_baf` >= 0.6, we think this allele in tumor is in LoH status, otherwise not in LoH status.
+
+
+In theory, if one allele is lost in tumor and the tumor's ploidy is 2 and purity is 100%, then for a het position in normal, the BAF of this position in tumor will be 0 or 100%. if the purity is not 100%, then the BAF will be centered around 0.5 (for example, if tumor ploidy is 2 and purity is 70%, then then BAF will be 0.77/0.23)
+
+when the tumor purity is 30% (assume ploidy is 2), then BAF will be 0.59/0.41.
+
+if the BAF is < 0.4 or > 0.6, then we think this het pos is a likely LoH position (or you can say that this het pos is likely covered by a LoH region)
+
+so, the cutoff we used here is based on the assumption that we can detect the LoH as long as the tumor purity >= 30%. for the tumor with purity < 30%, it is hard to detect the LoH with hgih confidence.
+
 
 
 ## Testing
-1. `cd /path/HLALOH/test`
-1. `sh run.sh`
-2. `sh 20091701T.HLALOH.sh`
+1. `cd /path/HLALOH/test` you will see two directoires: `Negative_Sample` and `Positive_Sample`
+2. `Negative_Sample` is a HLA-A LoH negative sample (validate by STR + GeneMapper), `Positive_Sample` is a HLA-A LoH positive sample (validate by STR + GeneMapper)
+3. cd `Positive_Sample` and `sh run.sh` (please modify `run.sh`)
+4. `nohup sh 201023033T.HLALOH.sh &`
 
-you can find three sub-dirs under `/path/HLALOH/test` dir:
-
-* bamdir (contain normal and tumor bams' soft link)
-* lohhla (lohhla software's results)
-* 2020\_10\_27\_09\_12\_29 (created by Optitype)
-
-the HLA typing result file is: `hla.result.new`, `hla.result.raw` is the original HLA typing result generated by `OptiType`
-
-the tumor ploidy & ploidy result file is: `PurityPloidyEst.txt`
-
-the HLA LOH original result file is: `/path/test/lohhla/20091701T.10.DNA.HLAlossPrediction_CI.xls`
-
-`/path/test/final_hla.xls` is the final re-formmated HLA LOH result file
-
-
-`$ cat final_hla.xls`
+The final result file is `*.hlaloh.result.xls`, the content in this file is:
 
 ```
-hla_allele      copyNumber      LOH
-hla_a_24_02     NA      NO
-hla_a_01_01     NA      NO
-hla_b_57_01     NA      NO
-hla_b_15_11     NA      NO
-hla_c_03_03     1.27    NO
-hla_c_06_02     1.27    NO
+Sample	Gene	HetPosNum	LikelyLoHPosNum	LoHPosPercent(%)	MedianBAF	CopyNumber	IfLoH
+201023033T	HLA-A	17	17	1.00	0.73	2.76	YES
+201023033T	HLA-B	12	12	1.00	0.72	2.80	YES
+201023033T	HLA-C	21	19	0.90	0.63	2.81	YES
 ```
-the first column is the inferred hla allele, the second column is the allele-specific copy number, the third column is the LOH result.
+
+1th col (Sample): sample name
+
+2th col (Gene): gene
+
+3th col (HetPosNum): the number of het positions in tumor BAF file
+
+4th col (LikelyLoHPosNum): the number of likely LoH positions
+
+5th col (LoHPosPercent(%)): LikelyLoHPosNum/HetPosNum
+
+6th col (MedianBAF): median BAF (for BAF, its value is mirror symmetry at 0.5, so if BAF < 0.5, we will use 1-BAF to calculate median BAF)
+
+7th (CopyNumber): copy number (not used to infer LoH, and we find the copy number for HLA region is not accurate)
+
+8th (IfLoH): YES/NO
+
+*Note:* if an allele has <= 10 het pos, we will not infer the LoH, so the IfLoH col will be `NA`, please note this.
 
 
-## How to determine a HLA LOH
-we use two values to determine if a HLA region occured LOH (see `Cell` paper's `METHOD DETAILS` section):
-
-1. allele copy number <= 0.5
-2. allelic imbalance is signif (p value < 0.01)
 
 ## Software Needed
-1. lohhla
-    * novoindex (included by this git repo, you do not need to install it)
-    * Jellyfish (https://www.cbcb.umd.edu/software/jellyfish/, a fast k-mer counting tool for DNA, you can use conda to install it. `conda install -c bioconda jellyfish`. you need to add binary path into your $PATH)
-    * bedtools (you need to add binary path into your $PATH)
-    * samtools (you need to add binary path into your $PATH)
-    * picard (SortSam.jar,FilterSamReads.jar. included by this git repo, you do not need to install it.)
-    * R
-2. ASCAT
-    * R package: ASCAT
-3. CNVscan
-    * see `/path/HLALOH/CNVscan/config.ini`
-4. OptiType
-    * razers3 (you need to install it and modify `/path/HLALOH/OptiType-1.3.2/config.ini.example`)
-    * glpk (you need to install glpk and add binary path into your $PATH)
+1. OptiType (used for HLA typing, see `https://github.com/FRED-2/OptiType` for install)
+2. CNVscan (used for calculate CNV, see `https://github.com/Xiaohuaniu0032/CNVscan` for usage)
+3. python2
+4. python3
+5. sambamba
+6. Rscript
+7. Bedtools
+8. BWA
+9. Samtools
+10. Java JRE
 
-## 
+
+## Questions
+###1) can be used for WES data?
+yes
+
+###2) can be used for panel data?
+yes, make sure your panel capures HLA region
+
+###3) how to validate HLA LoH?
+you can see `lohhla` Cell paper. it use polymorphic STR that close to HLA-A/B/C to detect allele imbalance.
