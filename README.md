@@ -35,7 +35,7 @@ optional arguments:
 ## Method
 For WES data, there exists a published tool `lohhla` for HLA LOH detection, but for small and medium-size capture panel data, we find that the `lohhla` is not very appropriate because `lohhla` needs to estimate tumor purity and ploidy, which is hard to estimate from panel data. besides the tumor purity and ploidy, we also find that the results output by `lohhla` are a little confused.
 
-We just use the BAF distribution to infer the HLA LOH status directly, although the method is simple and intuitional, but the result is effective （see below fig).
+We just use the BAF distribution to infer the HLA LOH status directly, although the method is simple and intuitional, but the result is effective (see below fig).
 
 ![tumor purity & BAF distribution](https://github.com/Xiaohuaniu0032/HLALOH/blob/master/qpure.plos.one.png)
 
