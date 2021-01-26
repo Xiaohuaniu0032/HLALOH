@@ -10,7 +10,9 @@ my $of = "$outdir/$tumor_name\.hlaloh.result.xls";
 # default cutoff
 my $loh_cutoff_lower = 0.4;
 my $loh_cutoff_upper = 0.6;
-my $loh_pct_cutoff = 0.6;
+
+my $loh_pct_cutoff = 0.65;
+my $median_baf_cutoff = 0.6;
 
 # how to determine the LOH by BAF distribution?
 # median BAF & sd(BAF)
@@ -58,7 +60,7 @@ sub determine_LOH{
     my @val = split /\t/, $loh_info; # my $val = "$gene\t$het_pos_n\t$loh_pos_n\t$loh_pct\t$median_baf\t$hla_cn";
 
     # how to determine LOH by BAF distribution?
-    # 1. loh pos pct >= 60% and
+    # 1. loh pos pct >= 65% and
     # 2. median BAF >= 0.6
 
     # if het_pos_n <= 10, then can not determine LOH status
@@ -72,7 +74,8 @@ sub determine_LOH{
         return($loh_status);
     }
 
-    if ($val[3] > 0.65 and $val[-2] >= 0.6){
+    if ($val[3] > $loh_pct_cutoff and $val[-2] >= $median_baf_cutoff){
+        # 0.65 and 0.6
         $loh_status = 'YES';
     }else{
         $loh_status = 'NO';
