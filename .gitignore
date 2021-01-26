@@ -1,9 +1,9 @@
-test/*.bam
-test/*.sam
-test/*.pileup
-test/*.mpileup
-test/*.vaf
+test/*/*.bam
+test/*/*.sam
+test/*/*.pileup
+test/*/*.mpileup
+test/*/*.vaf
+test/*/*.fastq
+
+tools/__pycache__/*.pyc
 */*.pyc
-tools/*pdf
-test2/*
-tools/__pycache__/*
