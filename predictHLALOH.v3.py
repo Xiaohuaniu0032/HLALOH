@@ -25,6 +25,7 @@ def parse_args():
     AP.add_argument('-bwa',help='bwa path',dest='bwa',default='/usr/bin/bwa')
     AP.add_argument('-samts',help='samtools bin',dest='samtools',default='/home/fulongfei/miniconda3/bin/samtools')
     AP.add_argument('-jre',help='java JRE',dest='jre',default='/usr/bin/java')
+    AP.add_argument('-clean',help='remove temp files',action='store_true')
     AP.add_argument('-od',help='output dir',dest='outdir')
 
     return AP.parse_args()
@@ -101,6 +102,11 @@ def main():
     ############### extract HLA reads from normal
     of.write('\n'+"###extract HLA reads from normal BAM file"+'\n')
     #tools.extract_HLA_reads.extract_HLA_reads(args.nbam,args.nname,args.outdir,of,chrname)
+    '''
+	extract_HLA_reads() will get fq1 and fq2 files
+    get_proper_aln_bam.py will re-align fq1 and fq2 using BWA and mark dup reads, then remove secondary & dup reads to get clean bam file
+    '''
+
     
     # aln fq and get proper_aln reads
     fq1_normal = "%s/%s.chr6region.1.fastq" % (args.outdir,args.nname)
@@ -108,6 +114,7 @@ def main():
 
     cmd = "%s %s/tools/get_proper_aln_bam.py %s %s %s %s %s %s %s %s" % (args.py3,bin_dir,fq1_normal,fq2_normal,args.nname,hla_fa,args.bwa,args.samtools,args.sbb,args.outdir)
     of.write(cmd+'\n')
+
 
     # aln two allele and get het pos and cal BAF
     of.write('\n'+'###baf2loh main script for normal'+'\n')
@@ -174,12 +181,22 @@ def main():
 
 
 
-    # BAF to LOH main method
+    # see how to determine LOH by Het Pos BAF
     cmd = "perl %s/tools/determine_HLALOH_by_BAF.pl %s %s %s %s" % (bin_dir,args.outdir,args.nname,args.tname,args.outdir)
     of.write(cmd+'\n')
 
+    
+    ########################################## remove temp files
+    if args.clean:
+        cmd = "%s %s/tools/rm_tmp_files.py %s %s %s" % (args.py3,bin_dir,args.outdir,args.nname,args.tname)
+        of.write(cmd+'\n')
+
+
     of.close()
 
+        
+
+            
     
 if __name__ == "__main__":
     main()
